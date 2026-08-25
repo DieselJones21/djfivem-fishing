@@ -12,7 +12,7 @@ Ocean, lake, and river fishing for FiveM. Catch fish with **ox_lib** progress ba
 ## Install
 
 1. Drop this folder into `resources` as `djfivem-fishing`.
-2. Merge `install/ox_inventory_items.lua` into `ox_inventory/data/items.lua`.
+2. Open `ox_inventory/data/items.lua` and paste the item blocks from `install/ox_inventory_items.lua` **inside** the existing `return { ... }` table. Do not replace the whole file, and do not leave any `img(...)` calls in it.
 3. Item icons are already in `images/` and load through `nui://djfivem-fishing/images/`. Optional: copy `images/*.png` into `ox_inventory/web/images/` if you want the default inventory path instead.
 4. Restart `ox_inventory`, then start this resource:
 
