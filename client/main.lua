@@ -37,6 +37,25 @@ end
 
 CloseShop = closeShop
 
+local function catalogFromConfig()
+    local items = {}
+    for i = 1, #Config.ShopCatalogOrder do
+        local name = Config.ShopCatalogOrder[i]
+        local data = Config.Equipment[name]
+        if data then
+            items[#items + 1] = {
+                item = name,
+                label = data.label,
+                description = data.description,
+                category = data.category,
+                price = data.price,
+                uses = data.uses,
+            }
+        end
+    end
+    return items
+end
+
 local function openShop(shop, view)
     if shopOpen or IsFishing() then return end
     local payload = lib.callback.await('djfivem-fishing:openShop', false, shop.id)
@@ -49,6 +68,7 @@ local function openShop(shop, view)
     currentShopId = shop.id
     SetNuiFocus(true, true)
     nuiCall('open', {
+        ok = true,
         view = view or shop.defaultView or 'shop',
         shop = {
             id = shop.id,
@@ -57,9 +77,9 @@ local function openShop(shop, view)
             views = shop.views,
         },
         player = payload.player,
-        catalog = payload.catalog,
-        fish = payload.fish,
-        equipment = payload.equipment,
+        catalog = catalogFromConfig(),
+        fish = payload.fish or {},
+        equipment = payload.equipment or {},
     })
 end
 

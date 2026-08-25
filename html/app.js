@@ -156,12 +156,33 @@ function currentPayload() {
   };
 }
 
+function toArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  return Object.keys(value)
+    .sort((a, b) => Number(a) - Number(b))
+    .map((key) => value[key])
+    .filter((entry) => entry && typeof entry === 'object' && (entry.item || entry.label));
+}
+
 function applyPayload(payload) {
-  if (!payload || !payload.ok) return;
-  state.player = payload.player || state.player;
-  state.catalog = payload.catalog || state.catalog;
-  state.fish = payload.fish || [];
-  state.equipment = payload.equipment || {};
+  if (!payload || payload.ok === false) return;
+
+  if (payload.player) {
+    state.player = {
+      name: payload.player.name || state.player.name,
+      cash: Number(payload.player.cash || 0),
+    };
+  }
+
+  const catalog = toArray(payload.catalog);
+  if (catalog.length) state.catalog = catalog;
+
+  state.fish = toArray(payload.fish);
+  state.equipment = payload.equipment && !Array.isArray(payload.equipment)
+    ? payload.equipment
+    : (payload.equipment || {});
+
   playerNameEl.textContent = state.player.name;
   playerAvatarEl.textContent = initials(state.player.name);
   render();
@@ -319,6 +340,7 @@ function render() {
 }
 
 function openUI(payload) {
+  payload = payload || {};
   if (payload.shop) state.shop = payload.shop;
   state.view = payload.view || 'shop';
   state.tab = 'all';
@@ -326,11 +348,13 @@ function openUI(payload) {
   state.qty = {};
   search.value = '';
   applyPayload(payload);
+  if (!state.catalog.length) state.catalog = DEMO.catalog;
   document.querySelectorAll('.nav-btn').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.view === state.view);
   });
   app.classList.remove('hidden');
   app.setAttribute('aria-hidden', 'false');
+  render();
 }
 
 function closeUI() {
@@ -419,8 +443,10 @@ window.addEventListener('keydown', (e) => {
 });
 
 window.addEventListener('message', (event) => {
-  const { action, data } = event.data || {};
-  if (action === 'open') openUI(data || {});
+  const msg = event.data || {};
+  const action = msg.action;
+  const data = msg.data || msg;
+  if (action === 'open') openUI(data);
   if (action === 'close') {
     app.classList.add('hidden');
     app.setAttribute('aria-hidden', 'true');
