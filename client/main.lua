@@ -3,6 +3,7 @@ lib.locale()
 local spawnedPeds = {}
 local spawnedBlips = {}
 local radiusBlips = {}
+local spawnedInteracts = {}
 local shopOpen = false
 local currentShopId
 
@@ -64,30 +65,49 @@ end
 
 OpenShop = openShop
 
-local function addTarget(entity, shop)
-    exports.ox_target:addLocalEntity(entity, {
-        {
-            name = 'djfivem_shop_' .. shop.id,
-            icon = 'fa-solid fa-shop',
-            label = locale('shop_open'),
-            distance = Config.TargetDistance,
-            onSelect = function()
-                openShop(shop, 'shop')
-            end,
-        },
-        {
-            name = 'djfivem_sell_' .. shop.id,
-            icon = 'fa-solid fa-fish',
-            label = locale('shop_sell'),
-            distance = Config.TargetDistance,
-            onSelect = function()
-                openShop(shop, 'sell')
-            end,
-        },
-    })
+local function waitForInteract()
+    if GetResourceState('interact') == 'started' then
+        return true
+    end
+
+    local started = pcall(function()
+        lib.waitFor(function()
+            return GetResourceState('interact') == 'started' or nil
+        end, 'interact resource is not started', 15000)
+    end)
+
+    return started and GetResourceState('interact') == 'started'
 end
 
-local function spawnShop(shop)
+local function addInteract(entity, shop)
+    local id = 'djfivem_fishing_' .. shop.id
+    exports.interact:AddLocalEntityInteraction({
+        entity = entity,
+        id = id,
+        name = id,
+        distance = Config.Interact.distance,
+        interactDst = Config.Interact.interactDst,
+        offset = Config.Interact.offset,
+        ignoreLos = false,
+        options = {
+            {
+                label = locale('shop_open'),
+                action = function()
+                    openShop(shop, 'shop')
+                end,
+            },
+            {
+                label = locale('shop_sell'),
+                action = function()
+                    openShop(shop, 'sell')
+                end,
+            },
+        },
+    })
+    spawnedInteracts[#spawnedInteracts + 1] = { entity = entity, id = id }
+end
+
+local function spawnShop(shop, useInteract)
     lib.requestModel(shop.ped, 5000)
 
     local ped = CreatePed(0, shop.ped, shop.coords.x, shop.coords.y, shop.coords.z - 1.0, shop.coords.w, false, true)
@@ -106,29 +126,8 @@ local function spawnShop(shop)
     end
 
     spawnedPeds[#spawnedPeds + 1] = ped
-
-    if Config.UseTarget and GetResourceState('ox_target') == 'started' then
-        addTarget(ped, shop)
-    else
-        local point = lib.points.new({
-            coords = vec3(shop.coords.x, shop.coords.y, shop.coords.z),
-            distance = Config.ShopDistance + 0.5,
-            shop = shop,
-        })
-
-        function point:onEnter()
-            lib.showTextUI(locale('textui_shop'))
-        end
-
-        function point:onExit()
-            lib.hideTextUI()
-        end
-
-        function point:nearby()
-            if self.currentDistance < Config.ShopDistance and IsControlJustReleased(0, 38) then
-                openShop(self.shop, self.shop.defaultView)
-            end
-        end
+    if useInteract then
+        addInteract(ped, shop)
     end
 
     if shop.blip then
@@ -189,8 +188,14 @@ local function setupZones()
 end
 
 CreateThread(function()
+    local useInteract = waitForInteract()
+    if not useInteract then
+        lib.print.error('interact is not started. Shop peds require the interact resource.')
+        notify('notify_need_interact', 'error')
+    end
+
     for i = 1, #Config.Shops do
-        spawnShop(Config.Shops[i])
+        spawnShop(Config.Shops[i], useInteract)
     end
     setupZones()
 end)
@@ -245,6 +250,14 @@ end)
 AddEventHandler('onResourceStop', function(resource)
     if resource ~= GetCurrentResourceName() then return end
     closeShop()
+    if GetResourceState('interact') == 'started' then
+        for i = 1, #spawnedInteracts do
+            local entry = spawnedInteracts[i]
+            pcall(function()
+                exports.interact:RemoveLocalEntityInteraction(entry.entity, entry.id)
+            end)
+        end
+    end
     for i = 1, #spawnedPeds do
         if DoesEntityExist(spawnedPeds[i]) then
             DeleteEntity(spawnedPeds[i])

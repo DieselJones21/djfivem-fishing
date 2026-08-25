@@ -36,5 +36,6 @@
   "zone_enter_river": "River fishing — use river bait",
   "keybind_fish": "Cast fishing line",
   "textui_shop": "[E] Tackle shop",
-  "textui_fish": "[G] Fish  ·  %s"
+  "textui_fish": "[G] Fish  ·  %s",
+  "notify_need_interact": "The interact resource is not started. Shop peds cannot be used."
 }

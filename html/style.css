@@ -290,17 +290,23 @@ body.preview {
 }
 
 .icon {
-  width: 46px;
-  height: 46px;
+  width: 52px;
+  height: 52px;
   border-radius: 14px;
   display: grid;
   place-items: center;
+  overflow: hidden;
   background: rgba(255,42,42,0.12);
   color: #ffd7d7;
   box-shadow: inset 0 0 0 1px rgba(255,42,42,0.2);
 }
 
-.icon svg { width: 24px; height: 24px; }
+.icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
 
 .badge {
   font-size: 10px;

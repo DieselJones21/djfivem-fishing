@@ -29,6 +29,7 @@ files {
     'html/style.css',
     'html/app.js',
     'locales/*.json',
+    'images/*.png',
 }
 
 ox_libs {
@@ -38,4 +39,5 @@ ox_libs {
 dependencies {
     'ox_lib',
     'ox_inventory',
+    'interact',
 }

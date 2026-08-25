@@ -15,10 +15,15 @@ Config.Money = {
 Config.Debug = false
 Config.FishKey = 'G'
 Config.Command = 'fish'
-Config.UseTarget = true
 Config.ShopDistance = 3.0
-Config.TargetDistance = 2.5
 Config.MaxBuyAmount = 50
+
+-- darktrovx/interact (resource name: interact)
+Config.Interact = {
+    distance = 8.0,
+    interactDst = 2.0,
+    offset = vec3(0.0, 0.0, 0.18),
+}
 Config.CastCooldown = 2 -- seconds between resolved casts (server)
 
 -- Rods are used from ox_inventory. Press G (or /fish) to cast with the best rod you have.

@@ -21,6 +21,15 @@ const ICONS = {
   fish: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12s5-6 11-6c5 0 7 6 7 6s-2 6-7 6c-6 0-11-6-11-6z"/><path d="M3 12l4 4M3 12l4-4"/><circle cx="16" cy="12" r="1"/></svg>',
 };
 
+function itemImage(name) {
+  if (inFiveM) return `nui://${resourceName}/images/${name}.png`;
+  return `../images/${name}.png`;
+}
+
+function iconFor(item) {
+  return `<img src="${itemImage(item.item)}" alt="${item.label || item.item}" />`;
+}
+
 const CATEGORIES = [
   { id: 'all', label: 'All gear' },
   { id: 'rods', label: 'Rods' },
@@ -236,12 +245,11 @@ function renderShop() {
 
   content.innerHTML = items.map((item) => {
     const qty = qtyFor(item.item, 50);
-    const icon = ICONS[item.category] || ICONS.rods;
     const owned = ownedCount(item.item);
     return `
       <article class="card" data-item="${item.item}">
         <div class="card-head">
-          <div class="icon">${icon}</div>
+          <div class="icon">${iconFor(item)}</div>
           <span class="badge">${item.category}</span>
         </div>
         <div>
@@ -277,7 +285,7 @@ function renderSell() {
     return `
       <article class="card" data-item="${item.item}">
         <div class="card-head">
-          <div class="icon">${ICONS.fish}</div>
+          <div class="icon">${iconFor(item)}</div>
           <span class="badge ${item.rarity}">${item.rarity} · ${item.zone}</span>
         </div>
         <div>
