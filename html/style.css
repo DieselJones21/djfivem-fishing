@@ -389,6 +389,11 @@ body.preview {
   gap: 8px;
 }
 
+.empty .icon {
+  width: 56px;
+  height: 56px;
+}
+
 .empty strong { color: var(--text); font-size: 18px; }
 
 .footer {

@@ -180,9 +180,16 @@ function qtyFor(item, max) {
   return Math.max(1, Math.min(max || 50, current));
 }
 
+function countOwned(predicate) {
+  return state.catalog.reduce((sum, item) => {
+    if (!predicate(item)) return sum;
+    return sum + (state.equipment[item.item] || 0);
+  }, 0);
+}
+
 function renderStats() {
-  const gear = Object.values(state.equipment).reduce((a, b) => a + b, 0);
-  const bait = (state.equipment.bait_ocean || 0) + (state.equipment.bait_lake || 0) + (state.equipment.bait_river || 0);
+  const gear = countOwned((item) => item.category !== 'bait');
+  const bait = countOwned((item) => item.category === 'bait');
   const fishCount = state.fish.reduce((a, f) => a + f.count, 0);
   const value = state.fish.reduce((a, f) => a + f.price * f.count, 0);
 
@@ -261,7 +268,7 @@ function renderShop() {
 function renderSell() {
   const items = state.fish.filter((item) => (state.tab === 'all' || item.zone === state.tab) && matchesQuery(item));
   if (!items.length) {
-    content.innerHTML = `<div class="empty"><strong>No fish in your pack</strong><p>Hit the ocean, lakes, or rivers, then sell here.</p></div>`;
+    content.innerHTML = `<div class="empty"><div class="icon">${ICONS.fish}</div><strong>No fish in your pack</strong><p>Hit the ocean, lakes, or rivers, then sell here.</p></div>`;
     return;
   }
 
