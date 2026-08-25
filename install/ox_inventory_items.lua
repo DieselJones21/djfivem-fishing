@@ -1,0 +1,112 @@
+-- Merge into ox_inventory/data/items.lua
+-- Icons live in this resource. They load automatically via nui://djfivem-fishing/images/
+-- You can also copy images/*.png into ox_inventory/web/images/ if you prefer the default path.
+
+local function img(name)
+    return ('nui://djfivem-fishing/images/%s.png'):format(name)
+end
+
+return {
+    ['fishing_rod_basic'] = {
+        label = 'Driftwood Rod',
+        weight = 1200,
+        stack = false,
+        close = true,
+        consume = 0,
+        description = 'A shoreline rod that will get you started.',
+        client = { export = 'djfivem-fishing.useRod', image = img('fishing_rod_basic') },
+    },
+    ['fishing_rod_pro'] = {
+        label = 'Carbon Rod',
+        weight = 1100,
+        stack = false,
+        close = true,
+        consume = 0,
+        description = 'Lighter blank with better hook-sets.',
+        client = { export = 'djfivem-fishing.useRod', image = img('fishing_rod_pro') },
+    },
+    ['fishing_rod_elite'] = {
+        label = 'Offshore Rod',
+        weight = 1400,
+        stack = false,
+        close = true,
+        consume = 0,
+        description = 'Heavy-action rod built for marlin and shark.',
+        client = { export = 'djfivem-fishing.useRod', image = img('fishing_rod_elite') },
+    },
+    ['fishing_reel_basic'] = {
+        label = 'Spin Reel',
+        weight = 450,
+        stack = false,
+        close = true,
+        consume = 0,
+        description = 'Reliable spinning reel.',
+        client = { image = img('fishing_reel_basic') },
+    },
+    ['fishing_reel_pro'] = {
+        label = 'Baitcaster',
+        weight = 500,
+        stack = false,
+        close = true,
+        consume = 0,
+        description = 'Smoother drag for tougher fish.',
+        client = { image = img('fishing_reel_pro') },
+    },
+    ['fishing_reel_elite'] = {
+        label = 'Tournament Reel',
+        weight = 560,
+        stack = false,
+        close = true,
+        consume = 0,
+        description = 'Saltwater drag system.',
+        client = { image = img('fishing_reel_elite') },
+    },
+    ['fishing_line'] = {
+        label = 'Fishing Line',
+        weight = 20,
+        stack = true,
+        close = false,
+        description = 'Mono line. Used each time a fish hits.',
+        client = { image = img('fishing_line') },
+    },
+    ['bait_ocean'] = {
+        label = 'Ocean Bait',
+        weight = 30,
+        stack = true,
+        close = false,
+        description = 'Required to fish the ocean.',
+        client = { image = img('bait_ocean') },
+    },
+    ['bait_lake'] = {
+        label = 'Lake Bait',
+        weight = 25,
+        stack = true,
+        close = false,
+        description = 'Required to fish lakes.',
+        client = { image = img('bait_lake') },
+    },
+    ['bait_river'] = {
+        label = 'River Bait',
+        weight = 25,
+        stack = true,
+        close = false,
+        description = 'Required to fish rivers.',
+        client = { image = img('bait_river') },
+    },
+
+    ['fish_sardine'] = { label = 'Sardine', weight = 200, stack = true, close = false, description = 'Ocean catch.', client = { image = img('fish_sardine') } },
+    ['fish_rockfish'] = { label = 'Rockfish', weight = 350, stack = true, close = false, description = 'Ocean catch.', client = { image = img('fish_rockfish') } },
+    ['fish_tuna'] = { label = 'Tuna', weight = 700, stack = true, close = false, description = 'Ocean catch.', client = { image = img('fish_tuna') } },
+    ['fish_marlin'] = { label = 'Marlin', weight = 1200, stack = true, close = false, description = 'Ocean catch.', client = { image = img('fish_marlin') } },
+    ['fish_shark'] = { label = 'Shark', weight = 1600, stack = true, close = false, description = 'Ocean catch.', client = { image = img('fish_shark') } },
+
+    ['fish_bluegill'] = { label = 'Bluegill', weight = 180, stack = true, close = false, description = 'Lake catch.', client = { image = img('fish_bluegill') } },
+    ['fish_perch'] = { label = 'Perch', weight = 220, stack = true, close = false, description = 'Lake catch.', client = { image = img('fish_perch') } },
+    ['fish_smallmouth_bass'] = { label = 'Smallmouth Bass', weight = 400, stack = true, close = false, description = 'Lake catch.', client = { image = img('fish_smallmouth_bass') } },
+    ['fish_largemouth_bass'] = { label = 'Largemouth Bass', weight = 450, stack = true, close = false, description = 'Lake catch.', client = { image = img('fish_largemouth_bass') } },
+    ['fish_trout'] = { label = 'Trout', weight = 380, stack = true, close = false, description = 'Lake catch.', client = { image = img('fish_trout') } },
+    ['fish_catfish'] = { label = 'Catfish', weight = 600, stack = true, close = false, description = 'Lake catch.', client = { image = img('fish_catfish') } },
+
+    ['fish_salmon'] = { label = 'Salmon', weight = 500, stack = true, close = false, description = 'River catch.', client = { image = img('fish_salmon') } },
+    ['fish_striper'] = { label = 'Striper', weight = 550, stack = true, close = false, description = 'River catch.', client = { image = img('fish_striper') } },
+}

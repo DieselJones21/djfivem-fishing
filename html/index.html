@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DJ Fishing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app" class="hidden" aria-hidden="true">
+    <div class="shell">
+      <div class="orb orb-a"></div>
+      <div class="orb orb-b"></div>
+      <div class="orb orb-c"></div>
+
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M4 18c8-2 12-10 14-14 2 8 8 14 14 16-8 2-12 8-14 12-2-8-8-12-14-14z" fill="currentColor"/>
+            </svg>
+          </span>
+          <div>
+            <strong>DJ Fishing</strong>
+            <small id="shop-subtitle">Tackle &amp; market</small>
+          </div>
+        </div>
+
+        <nav class="nav" id="nav">
+          <button type="button" class="nav-btn active" data-view="shop">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16l-1.2 12.4A2 2 0 0 1 16.81 21H7.19a2 2 0 0 1-1.99-1.6L4 7z"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>
+            Store
+          </button>
+          <button type="button" class="nav-btn" data-view="sell">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12c4-6 12-6 16 0-4 6-12 6-16 0z"/><circle cx="12" cy="12" r="2.2"/></svg>
+            Sell
+          </button>
+        </nav>
+
+        <div class="profile">
+          <div class="profile-copy">
+            <strong id="player-name">Angler</strong>
+            <span>Licensed angler</span>
+          </div>
+          <div class="avatar" id="player-avatar">DJ</div>
+        </div>
+      </header>
+
+      <section class="stats" id="stats"></section>
+
+      <div class="toolbar">
+        <div class="tabs" id="tabs"></div>
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="M16.5 16.5 21 21"/></svg>
+          <input id="search" type="text" placeholder="Search gear or catch..." autocomplete="off" />
+        </label>
+      </div>
+
+      <main class="content" id="content"></main>
+
+      <footer class="footer">
+        <span>DJ Fishing System</span>
+        <span class="keychip">ESC Close</span>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>
