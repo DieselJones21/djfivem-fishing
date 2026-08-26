@@ -77,12 +77,16 @@ local function openShop(shop, view)
             id = shop.id,
             label = shop.label,
             subtitle = shop.subtitle,
-            views = shop.views,
+            views = shop.views or Config.ShopViews or { 'shop', 'sell' },
         },
         player = payload.player,
         catalog = catalogFromConfig(),
         fish = payload.fish or {},
         equipment = payload.equipment or {},
+        tasks = payload.tasks or {},
+        board = payload.board or {},
+        you = payload.you or {},
+        resetsIn = payload.resetsIn or 0,
     })
 end
 
@@ -191,15 +195,19 @@ local function despawnShopPed(shop)
 end
 
 local function createZoneBlip(zone)
-    local style = Config.ZoneBlip[zone.type]
+    local style = (zone.offshore and Config.ZoneBlip.offshore) or Config.ZoneBlip[zone.type]
     if not style then return end
 
     local blip = AddBlipForCoord(zone.coords.x, zone.coords.y, zone.coords.z)
-    SetBlipSprite(blip, Config.ZoneBlip.sprite or 68)
+    SetBlipSprite(blip, style.sprite or Config.ZoneBlip.sprite or 68)
     SetBlipDisplay(blip, 4)
-    SetBlipScale(blip, Config.ZoneBlip.scale or 0.7)
+    SetBlipScale(blip, style.scale or Config.ZoneBlip.scale or 0.7)
     SetBlipColour(blip, style.color)
-    SetBlipAsShortRange(blip, Config.ZoneBlip.shortRange ~= false)
+    local shortRange = Config.ZoneBlip.shortRange ~= false
+    if style.shortRange ~= nil then
+        shortRange = style.shortRange
+    end
+    SetBlipAsShortRange(blip, shortRange)
     BeginTextCommandSetBlipName('STRING')
     AddTextComponentString(('%s · %s'):format(style.label or 'Fishing', zone.name))
     EndTextCommandSetBlipName(blip)
@@ -246,7 +254,9 @@ local function setupZones()
                 if not CurrentZone or CurrentZone.name ~= found.name then
                     local previous = CurrentZone
                     CurrentZone = found
-                    if not previous or previous.type ~= found.type then
+                    if found.offshore then
+                        notify('zone_enter_offshore', 'inform')
+                    elseif not previous or previous.type ~= found.type then
                         notify('zone_enter_' .. found.type, 'inform')
                     end
                 end
@@ -348,6 +358,17 @@ end)
 
 RegisterNUICallback('refresh', function(_, cb)
     cb(refreshFromServer() or { ok = false })
+end)
+
+RegisterNUICallback('claimTask', function(data, cb)
+    local result = lib.callback.await('djfivem-fishing:claimTask', false, currentShopId, data and data.id)
+    if result and result.ok then
+        notify('notify_task_claimed', 'success', result.label, result.money or 0)
+        result.refresh = refreshFromServer()
+    else
+        notify(result and result.error or 'notify_invalid', 'error')
+    end
+    cb(result or { ok = false })
 end)
 
 AddEventHandler('onResourceStop', function(resource)
