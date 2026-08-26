@@ -1,11 +1,11 @@
 lib.locale()
 
-local spawnedPeds = {}
 local spawnedBlips = {}
 local radiusBlips = {}
-local spawnedInteracts = {}
+local shopPeds = {}
 local shopOpen = false
 local currentShopId
+local cachedCatalog
 
 CurrentZone = nil
 
@@ -38,6 +38,8 @@ end
 CloseShop = closeShop
 
 local function catalogFromConfig()
+    if cachedCatalog then return cachedCatalog end
+
     local items = {}
     for i = 1, #Config.ShopCatalogOrder do
         local name = Config.ShopCatalogOrder[i]
@@ -53,6 +55,7 @@ local function catalogFromConfig()
             }
         end
     end
+    cachedCatalog = items
     return items
 end
 
@@ -124,12 +127,29 @@ local function addInteract(entity, shop)
             },
         },
     })
-    spawnedInteracts[#spawnedInteracts + 1] = { entity = entity, id = id }
+    return id
 end
 
-local function spawnShop(shop, useInteract)
-    lib.requestModel(shop.ped, 5000)
+local function createShopBlip(shop)
+    if not shop.blip then return end
+    local blip = AddBlipForCoord(shop.coords.x, shop.coords.y, shop.coords.z)
+    SetBlipSprite(blip, shop.blip.sprite)
+    SetBlipDisplay(blip, 4)
+    SetBlipScale(blip, shop.blip.scale)
+    SetBlipColour(blip, shop.blip.color)
+    SetBlipAsShortRange(blip, true)
+    BeginTextCommandSetBlipName('STRING')
+    AddTextComponentString(shop.blip.label)
+    EndTextCommandSetBlipName(blip)
+    spawnedBlips[#spawnedBlips + 1] = blip
+end
 
+local function spawnShopPed(shop, useInteract)
+    if shopPeds[shop.id] and DoesEntityExist(shopPeds[shop.id].entity) then
+        return
+    end
+
+    lib.requestModel(shop.ped, 5000)
     local ped = CreatePed(0, shop.ped, shop.coords.x, shop.coords.y, shop.coords.z - 1.0, shop.coords.w, false, true)
     SetEntityAsMissionEntity(ped, true, true)
     SetPedFleeAttributes(ped, 0, false)
@@ -145,66 +165,127 @@ local function spawnShop(shop, useInteract)
         TaskStartScenarioInPlace(ped, shop.scenario, 0, true)
     end
 
-    spawnedPeds[#spawnedPeds + 1] = ped
+    local interactId
     if useInteract then
-        addInteract(ped, shop)
+        interactId = addInteract(ped, shop)
     end
 
-    if shop.blip then
-        local blip = AddBlipForCoord(shop.coords.x, shop.coords.y, shop.coords.z)
-        SetBlipSprite(blip, shop.blip.sprite)
-        SetBlipDisplay(blip, 4)
-        SetBlipScale(blip, shop.blip.scale)
-        SetBlipColour(blip, shop.blip.color)
-        SetBlipAsShortRange(blip, true)
-        BeginTextCommandSetBlipName('STRING')
-        AddTextComponentString(shop.blip.label)
-        EndTextCommandSetBlipName(blip)
-        spawnedBlips[#spawnedBlips + 1] = blip
+    shopPeds[shop.id] = { entity = ped, interactId = interactId }
+end
+
+local function despawnShopPed(shop)
+    local entry = shopPeds[shop.id]
+    if not entry then return end
+
+    if entry.interactId and GetResourceState('interact') == 'started' then
+        pcall(function()
+            exports.interact:RemoveLocalEntityInteraction(entry.entity, entry.interactId)
+        end)
+    end
+
+    if DoesEntityExist(entry.entity) then
+        DeleteEntity(entry.entity)
+    end
+
+    shopPeds[shop.id] = nil
+end
+
+local function createZoneBlip(zone)
+    local style = Config.ZoneBlip[zone.type]
+    if not style then return end
+
+    local blip = AddBlipForCoord(zone.coords.x, zone.coords.y, zone.coords.z)
+    SetBlipSprite(blip, Config.ZoneBlip.sprite or 68)
+    SetBlipDisplay(blip, 4)
+    SetBlipScale(blip, Config.ZoneBlip.scale or 0.7)
+    SetBlipColour(blip, style.color)
+    SetBlipAsShortRange(blip, Config.ZoneBlip.shortRange ~= false)
+    BeginTextCommandSetBlipName('STRING')
+    AddTextComponentString(('%s · %s'):format(style.label or 'Fishing', zone.name))
+    EndTextCommandSetBlipName(blip)
+    spawnedBlips[#spawnedBlips + 1] = blip
+
+    if Config.ShowZoneRadius then
+        local radius = AddBlipForRadius(zone.coords.x, zone.coords.y, zone.coords.z, zone.radius)
+        SetBlipColour(radius, style.color)
+        SetBlipAlpha(radius, style.alpha or 70)
+        radiusBlips[#radiusBlips + 1] = radius
     end
 end
 
 local function setupZones()
-    local inside = {}
+    local zones = Config.Zones
+    local zoneCount = #zones
 
-    local function refreshZone()
-        local nextZone
-        for _, zone in pairs(inside) do
-            nextZone = zone
-            break
+    if Config.ShowZoneBlips then
+        for i = 1, zoneCount do
+            createZoneBlip(zones[i])
         end
-        CurrentZone = nextZone
     end
 
-    for i = 1, #Config.Zones do
-        local zone = Config.Zones[i]
+    CreateThread(function()
+        while true do
+            local coords = GetEntityCoords(cache.ped)
+            local found, nearestSq
 
-        lib.zones.sphere({
-            coords = zone.coords,
-            radius = zone.radius,
-            debug = Config.Debug,
-            onEnter = function()
-                local previous = CurrentZone
-                inside[zone.name] = zone
-                CurrentZone = zone
-                if not previous or previous.type ~= zone.type then
-                    notify('zone_enter_' .. zone.type, 'inform')
+            for i = 1, zoneCount do
+                local zone = zones[i]
+                local dx = coords.x - zone.coords.x
+                local dy = coords.y - zone.coords.y
+                local distSq = dx * dx + dy * dy
+                if distSq <= zone.radiusSq then
+                    found = zone
+                    break
                 end
-            end,
-            onExit = function()
-                inside[zone.name] = nil
-                refreshZone()
-            end,
-        })
+                if not nearestSq or distSq < nearestSq then
+                    nearestSq = distSq
+                end
+            end
 
-        if Config.ShowZoneBlips then
-            local style = Config.ZoneBlip[zone.type]
-            local blip = AddBlipForRadius(zone.coords.x, zone.coords.y, zone.coords.z, zone.radius)
-            SetBlipColour(blip, style.color)
-            SetBlipAlpha(blip, style.alpha)
-            radiusBlips[#radiusBlips + 1] = blip
+            if found then
+                if not CurrentZone or CurrentZone.name ~= found.name then
+                    local previous = CurrentZone
+                    CurrentZone = found
+                    if not previous or previous.type ~= found.type then
+                        notify('zone_enter_' .. found.type, 'inform')
+                    end
+                end
+                Wait(Config.ZoneCheck.inside)
+            else
+                if CurrentZone then
+                    CurrentZone = nil
+                end
+                local wait = Config.ZoneCheck.far
+                if nearestSq and nearestSq < Config.ZoneCheck.nearbySq then
+                    wait = Config.ZoneCheck.nearby
+                end
+                Wait(wait)
+            end
         end
-    end
+    end)
+end
+
+local function streamShopPeds(useInteract)
+    local spawnSq = Config.PedSpawn.distanceSq
+    local despawnSq = Config.PedSpawn.despawnSq
+
+    CreateThread(function()
+        while true do
+            local coords = GetEntityCoords(cache.ped)
+            for i = 1, #Config.Shops do
+                local shop = Config.Shops[i]
+                local dx = coords.x - shop.coords.x
+                local dy = coords.y - shop.coords.y
+                local distSq = dx * dx + dy * dy
+                if distSq <= spawnSq then
+                    spawnShopPed(shop, useInteract)
+                elseif distSq >= despawnSq then
+                    despawnShopPed(shop)
+                end
+            end
+            Wait(Config.PedSpawn.interval)
+        end
+    end)
 end
 
 CreateThread(function()
@@ -215,9 +296,11 @@ CreateThread(function()
     end
 
     for i = 1, #Config.Shops do
-        spawnShop(Config.Shops[i], useInteract)
+        createShopBlip(Config.Shops[i])
     end
+
     setupZones()
+    streamShopPeds(useInteract)
 end)
 
 local function refreshFromServer()
@@ -270,17 +353,14 @@ end)
 AddEventHandler('onResourceStop', function(resource)
     if resource ~= GetCurrentResourceName() then return end
     closeShop()
-    if GetResourceState('interact') == 'started' then
-        for i = 1, #spawnedInteracts do
-            local entry = spawnedInteracts[i]
+    for _, shop in pairs(shopPeds) do
+        if shop.interactId and GetResourceState('interact') == 'started' then
             pcall(function()
-                exports.interact:RemoveLocalEntityInteraction(entry.entity, entry.id)
+                exports.interact:RemoveLocalEntityInteraction(shop.entity, shop.interactId)
             end)
         end
-    end
-    for i = 1, #spawnedPeds do
-        if DoesEntityExist(spawnedPeds[i]) then
-            DeleteEntity(spawnedPeds[i])
+        if DoesEntityExist(shop.entity) then
+            DeleteEntity(shop.entity)
         end
     end
     for i = 1, #spawnedBlips do

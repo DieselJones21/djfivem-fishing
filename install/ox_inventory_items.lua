@@ -71,7 +71,8 @@ return {
         weight = 20,
         stack = true,
         close = false,
-        description = 'Mono line. Used each time a fish hits.',
+        consume = 0,
+        description = 'Mono spool. Each spool lasts 5 bites.',
         client = { image = 'nui://djfivem-fishing/images/fishing_line.png' },
     },
     ['bait_ocean'] = {

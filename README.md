@@ -36,13 +36,15 @@ Shop peds are wired with `exports.interact:AddLocalEntityInteraction`. Look at t
 2. Walk into a marked fishing area (ocean / lake / river) and stand on the bank facing the water.
 3. Use the rod from inventory, press **G**, or run `/fish`.
 4. Wait out the cast and bite progress bars, then complete the **ox_lib skill check**. Harder fish (marlin, shark, striper, catfish) take more checks. Better reels open the success window.
-5. Correct bait is required: ocean bait on the coast, lake bait on lakes, river bait on rivers. Line and bait are consumed when a fish hits.
+5. Correct bait is required: ocean bait on the coast, lake bait on lakes, river bait on rivers. Bait is used every bite. **Fishing line lasts 5 bites per spool** (the durability bar on the item shows remaining uses).
+
+Every fishing zone has a named map blip (blue ocean, green lake, yellow river). Shop peds only spawn when you are nearby. Set `Config.ShowZoneRadius = true` if you also want the circle overlay.
 
 Admin test kit: `/fishingkit` (ace `group.admin`).
 
 ## Waters and payouts
 
-Prices are server-side. Bait + line cost is paid on every bite, so common fish still profit without printing money.
+Prices are server-side. Bait is spent every bite; one spool of line covers 5 bites. Common fish still profit without printing money.
 
 | Water | Fish | Sell |
 | --- | --- | --- |

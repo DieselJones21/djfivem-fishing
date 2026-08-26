@@ -83,7 +83,7 @@ function StartFishing(preferredRod)
         return
     end
 
-    if cache.vehicle or IsPedInAnyVehicle(ped, false) then
+    if cache.vehicle then
         Notify('notify_vehicle', 'error')
         return
     end
@@ -109,7 +109,7 @@ function StartFishing(preferredRod)
     Wait(700)
 
     while fishing do
-        if isDead() or (cache.vehicle or IsPedInAnyVehicle(cache.ped, false)) then
+        if isDead() or cache.vehicle then
             break
         end
 
