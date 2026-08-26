@@ -235,6 +235,7 @@ local function fishStock(src)
 end
 
 local function shopPayload(src)
+    local extra = Stats.Hud(src)
     return {
         ok = true,
         player = {
@@ -244,20 +245,28 @@ local function shopPayload(src)
         catalog = catalog(),
         fish = fishStock(src),
         equipment = equipmentCounts(src),
+        tasks = extra.tasks,
+        board = extra.board,
+        you = extra.you,
+        resetsIn = extra.resetsIn,
     }
 end
 
-local function weightedFish(zoneType, rareBonus)
+local function weightedFish(zoneType, rareBonus, offshore)
     local pool = fishByZone[zoneType]
     if not pool or #pool == 0 then return nil end
 
     local total = 0
     local weighted = {}
     rareBonus = rareBonus or 0
+    local luck = offshore and Config.OffshoreLuck or nil
 
     for i = 1, #pool do
         local entry = pool[i]
         local weight = entry.data.weight
+        if luck then
+            weight = weight * (luck[entry.data.rarity] or 1.0)
+        end
         if rareBonus > 0 and (entry.data.rarity == 'rare' or entry.data.rarity == 'legendary') then
             weight = weight + rareBonus
         end
@@ -358,6 +367,8 @@ lib.callback.register('djfivem-fishing:sell', function(source, shopId, itemName,
         return { ok = false, error = 'notify_invalid' }
     end
 
+    Stats.RecordSell(source, total)
+
     return {
         ok = true,
         amount = amount,
@@ -403,6 +414,8 @@ lib.callback.register('djfivem-fishing:sellAll', function(source, shopId)
         end
         return { ok = false, error = 'notify_invalid' }
     end
+
+    Stats.RecordSell(source, payout)
 
     return { ok = true, total = payout, cash = Bridge.GetMoney(source) }
 end)
@@ -461,6 +474,7 @@ lib.callback.register('djfivem-fishing:prepareCast', function(source, info)
     pending[source] = {
         zone = zone.type,
         zoneName = zone.name,
+        offshore = zone.offshore == true,
         rod = rodName,
         rodSlot = rodSlot.slot,
         reel = reelName,
@@ -487,7 +501,7 @@ lib.callback.register('djfivem-fishing:onBite', function(source)
     end
 
     local rod = Config.Equipment[cast.rod]
-    local rolled = weightedFish(cast.zone, rod and rod.rareBonus or 0)
+    local rolled = weightedFish(cast.zone, rod and rod.rareBonus or 0, cast.offshore)
     if not rolled then
         clearPending(source)
         return { ok = false, error = 'notify_no_bite' }
@@ -582,6 +596,13 @@ lib.callback.register('djfivem-fishing:resolveCast', function(source, success, r
         return { ok = false, error = 'notify_cannot_carry', stop = true }
     end
 
+    Stats.RecordCatch(source, {
+        item = cast.fish,
+        zone = fish.zone,
+        rarity = fish.rarity,
+        offshore = cast.offshore == true,
+    })
+
     return {
         ok = true,
         caught = true,
@@ -593,6 +614,13 @@ lib.callback.register('djfivem-fishing:resolveCast', function(source, success, r
         reelBroke = reelBroke,
         stop = rodBroke or reelBroke,
     }
+end)
+
+lib.callback.register('djfivem-fishing:claimTask', function(source, shopId, taskId)
+    if type(shopId) ~= 'string' or not isNearShop(source, shopId) then
+        return { ok = false, error = 'notify_too_far' }
+    end
+    return Stats.Claim(source, taskId)
 end)
 
 lib.callback.register('djfivem-fishing:cancelCast', function(source)

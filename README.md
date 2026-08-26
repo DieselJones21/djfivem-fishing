@@ -38,9 +38,23 @@ Shop peds are wired with `exports.interact:AddLocalEntityInteraction`. Look at t
 4. Wait out the cast and bite progress bars, then complete the **ox_lib skill check**. Harder fish (marlin, shark, striper, catfish) take more checks. Better reels open the success window.
 5. Correct bait is required: ocean bait on the coast, lake bait on lakes, river bait on rivers. Bait is used every bite. **Fishing line lasts 5 bites per spool** (the durability bar on the item shows remaining uses).
 
-Every fishing zone has a named map blip (blue ocean, green lake, yellow river). Shop peds only spawn when you are nearby. Set `Config.ShowZoneRadius = true` if you also want the circle overlay.
+Every fishing zone has a named map blip (blue ocean, green lake, yellow river). **Red offshore blips** stay visible on the pause map so you can boat out to them. Shop and rental peds only spawn when you are nearby. Set `Config.ShowZoneRadius = true` if you also want the circle overlay.
 
 Admin test kit: `/fishingkit` (ace `group.admin`).
+
+## Daily tasks and leaderboard
+
+Open any tackle shop and use the **Tasks** and **Board** tabs.
+
+- Daily tasks reset at `Config.DailyResetHour` (server time, default midnight).
+- Catch, sell, offshore, and boat-rental tasks credit automatically. Claim the cash (and item) rewards in the shop.
+- The board tracks **most fish caught** and **most money made**, for today and all-time. Top 10 plus your rank. Stats save to `data/stats.json`.
+
+## Boat rentals
+
+Interact with a rental ped at **Vespucci / Puerto Del Sol**, **Chumash Pier**, **Paleto Bay**, or **Alamo Sea**. Pay the rental fee plus a deposit, then drive out to an offshore hotspot and fish from the boat (press **G**). Return the boat at a dock to get the deposit back. Rentals last 20 minutes by default (`Config.BoatRental.duration`).
+
+You can fish from boats. Cars still block casting.
 
 ## Waters and payouts
 
@@ -52,6 +66,8 @@ Prices are server-side. Bait is spent every bite; one spool of line covers 5 bit
 | Lake | Bluegill, perch, smallmouth, largemouth, trout, catfish | $12 – $88 |
 | River | Salmon, striper | $58 – $96 |
 
-Tackle shops: Del Perro, Chumash Pier, Alamo Sea, Cassidy / river road, and a La Puerta fish buyer. Shop and sell share the same UI.
+Tackle shops: Del Perro, Chumash Pier, Alamo Sea, Cassidy / river road, and a La Puerta fish buyer. Shop, sell, daily tasks, and the leaderboard share the same UI.
 
-Move peds and zones in `config.lua`. Radius blips show legal fishing water; red blips mark shops.
+Boat docks: Vespucci marina, Chumash, Paleto Bay, and Alamo Sea. Offshore marks are the red fish blips in open water.
+
+Move peds, docks, and zones in `config.lua`. Radius blips show legal fishing water; red shop blips mark tackle; teal/green boat blips mark rentals.

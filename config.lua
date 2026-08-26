@@ -30,6 +30,7 @@ Config.CastCooldown = 2 -- seconds between resolved casts (server)
 Config.RequireZone = true
 Config.RequireFacingWater = true
 Config.AllowSwimming = false
+Config.AllowBoatFishing = true
 
 Config.BiteWait = { min = 4500, max = 11000 }
 Config.CastDuration = 2200
@@ -349,6 +350,20 @@ Config.Zones = {
     { name = 'LS River Downtown', type = 'river', coords = vec3(400.0, -1600.0, 20.0), radius = 140.0 },
     { name = 'Paleto Creek', type = 'river', coords = vec3(-575.0, 4428.0, 31.0), radius = 140.0 },
     { name = 'Tataviam Creek', type = 'river', coords = vec3(2588.0, 615.0, 98.0), radius = 130.0 },
+
+    -- Offshore hotspots (boat out to the marker)
+    { name = 'Pacific Trench', type = 'ocean', coords = vec3(-2200.0, -2100.0, 0.5), radius = 320.0, offshore = true },
+    { name = 'West Current', type = 'ocean', coords = vec3(-3600.0, 400.0, 0.5), radius = 280.0, offshore = true },
+    { name = 'Chumash Grounds', type = 'ocean', coords = vec3(-3850.0, 1800.0, 0.5), radius = 280.0, offshore = true },
+    { name = 'Paleto Shelf', type = 'ocean', coords = vec3(-2100.0, 6200.0, 0.5), radius = 280.0, offshore = true },
+    { name = 'Procopio Deep', type = 'ocean', coords = vec3(800.0, 7200.0, 0.5), radius = 260.0, offshore = true },
+    { name = 'El Gordo Banks', type = 'ocean', coords = vec3(3900.0, 6200.0, 0.5), radius = 260.0, offshore = true },
+    { name = 'San Chianski Deep', type = 'ocean', coords = vec3(4300.0, 3800.0, 0.5), radius = 280.0, offshore = true },
+    { name = 'Palomino Rise', type = 'ocean', coords = vec3(3800.0, -400.0, 0.5), radius = 260.0, offshore = true },
+    { name = 'Harbor Mouth', type = 'ocean', coords = vec3(400.0, -3200.0, 0.5), radius = 280.0, offshore = true },
+    { name = 'Elysian Drop', type = 'ocean', coords = vec3(-400.0, -2800.0, 0.5), radius = 240.0, offshore = true },
+    { name = 'Alamo Deep', type = 'lake', coords = vec3(1550.0, 4080.0, 30.5), radius = 200.0, offshore = true },
+    { name = 'Zancudo Basin', type = 'lake', coords = vec3(-2200.0, 2580.0, 0.5), radius = 180.0, offshore = true },
 }
 
 for i = 1, #Config.Zones do
@@ -366,6 +381,15 @@ Config.ZoneBlip = {
     ocean = { color = 3, label = 'Ocean Fishing' },
     lake = { color = 2, label = 'Lake Fishing' },
     river = { color = 5, label = 'River Fishing' },
+    offshore = { sprite = 68, color = 1, scale = 0.85, shortRange = false, label = 'Offshore Fishing' },
+}
+
+-- Rare/legendary fish are more likely once you leave the shoreline.
+Config.OffshoreLuck = {
+    common = 0.55,
+    uncommon = 0.9,
+    rare = 2.4,
+    legendary = 3.2,
 }
 
 -- Stream shop peds in only when nearby
@@ -452,4 +476,137 @@ Config.ShopCatalogOrder = {
     'fishing_reel_basic', 'fishing_reel_pro', 'fishing_reel_elite',
     'fishing_line',
     'bait_ocean', 'bait_lake', 'bait_river',
+}
+
+Config.ShopViews = { 'shop', 'sell', 'tasks', 'board' }
+
+----------------------------------------------------------------
+-- Daily tasks (reset at Config.DailyResetHour, server time)
+----------------------------------------------------------------
+Config.DailyResetHour = 0
+Config.LeaderboardSize = 10
+
+Config.DailyTasks = {
+    {
+        id = 'catch_any',
+        label = 'Fill the cooler',
+        description = 'Land 8 fish of any kind today.',
+        type = 'catch',
+        count = 8,
+        reward = { money = 175 },
+    },
+    {
+        id = 'catch_ocean',
+        label = 'Saltwater run',
+        description = 'Catch 5 ocean fish.',
+        type = 'catch_zone',
+        zone = 'ocean',
+        count = 5,
+        reward = { money = 200 },
+    },
+    {
+        id = 'catch_fresh',
+        label = 'Freshwater grind',
+        description = 'Catch 5 lake or river fish.',
+        type = 'catch_fresh',
+        count = 5,
+        reward = { money = 180 },
+    },
+    {
+        id = 'catch_trophy',
+        label = 'Trophy hunt',
+        description = 'Land a rare or legendary fish.',
+        type = 'catch_rarity',
+        rarities = { rare = true, legendary = true },
+        count = 1,
+        reward = { money = 400, items = { { 'bait_ocean', 5 }, { 'fishing_line', 3 } } },
+    },
+    {
+        id = 'catch_offshore',
+        label = 'Go offshore',
+        description = 'Catch 3 fish at an offshore hotspot.',
+        type = 'catch_offshore',
+        count = 3,
+        reward = { money = 275 },
+    },
+    {
+        id = 'sell_cash',
+        label = 'Cash out',
+        description = 'Sell $400 worth of fish today.',
+        type = 'sell',
+        count = 400,
+        reward = { money = 125 },
+    },
+    {
+        id = 'rent_boat',
+        label = 'Launch a skiff',
+        description = 'Rent a boat from any fishing dock.',
+        type = 'boat',
+        count = 1,
+        reward = { money = 75 },
+    },
+}
+
+----------------------------------------------------------------
+-- Boat rentals
+----------------------------------------------------------------
+Config.BoatRental = {
+    duration = 1200, -- seconds; 0 = until returned
+    warnAt = 120,
+    returnRadius = 32.0,
+    lockDoors = false,
+}
+
+Config.BoatCatalog = {
+    dinghy = { model = `dinghy`, label = 'Dinghy', description = 'Small work skiff. Fine for lakes and inshore.', price = 200, deposit = 100 },
+    seashark = { model = `seashark`, label = 'Seashark', description = 'Jet ski. Fast hop to nearby marks.', price = 150, deposit = 75 },
+    suntrap = { model = `suntrap`, label = 'Suntrap', description = 'Open bow runabout for coastal runs.', price = 350, deposit = 150 },
+    speeder = { model = `speeder`, label = 'Speeder', description = 'Fast offshore boat for the deep marks.', price = 650, deposit = 250 },
+}
+
+Config.BoatDocks = {
+    {
+        id = 'vespucci',
+        label = 'Vespucci Boat Rental',
+        subtitle = 'Puerto Del Sol marina',
+        ped = `s_m_y_baywatch_01`,
+        coords = vec4(-806.42, -1496.64, 1.60, 110.0),
+        spawn = vec4(-842.20, -1512.40, 0.15, 110.0),
+        scenario = 'WORLD_HUMAN_CLIPBOARD',
+        boats = { 'dinghy', 'seashark', 'suntrap', 'speeder' },
+        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Boat Rental' },
+    },
+    {
+        id = 'chumash',
+        label = 'Chumash Boat Rental',
+        subtitle = 'Pier launch',
+        ped = `a_m_y_beach_01`,
+        coords = vec4(-3428.10, 995.20, 8.30, 90.0),
+        spawn = vec4(-3462.00, 968.40, 0.40, 90.0),
+        scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
+        boats = { 'dinghy', 'suntrap', 'speeder' },
+        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Boat Rental' },
+    },
+    {
+        id = 'paleto',
+        label = 'Paleto Boat Rental',
+        subtitle = 'Bay launch',
+        ped = `a_m_m_farmer_01`,
+        coords = vec4(-247.80, 6548.40, 11.10, 140.0),
+        spawn = vec4(-285.00, 6628.00, 0.40, 40.0),
+        scenario = 'WORLD_HUMAN_SMOKING',
+        boats = { 'dinghy', 'seashark', 'suntrap' },
+        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Boat Rental' },
+    },
+    {
+        id = 'alamo',
+        label = 'Alamo Boat Rental',
+        subtitle = 'Lakeside launch',
+        ped = `a_m_m_hillbilly_02`,
+        coords = vec4(1540.55, 3907.20, 31.70, 200.0),
+        spawn = vec4(1558.00, 3900.00, 30.40, 170.0),
+        scenario = 'WORLD_HUMAN_CLIPBOARD',
+        boats = { 'dinghy', 'seashark' },
+        blip = { sprite = 410, color = 2, scale = 0.8, label = 'Boat Rental' },
+    },
 }

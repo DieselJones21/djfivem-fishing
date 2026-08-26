@@ -185,6 +185,25 @@ function Bridge.AddMoney(src, amount)
     return exports.ox_inventory:AddItem(src, Config.Money.item, amount) == true
 end
 
+function Bridge.GetIdentifier(src)
+    if GetPlayerIdentifierByType then
+        local license = GetPlayerIdentifierByType(src, 'license2') or GetPlayerIdentifierByType(src, 'license')
+        if license and license ~= '' then
+            return license
+        end
+    end
+
+    local identifiers = GetPlayerIdentifiers(src) or {}
+    for i = 1, #identifiers do
+        local value = identifiers[i]
+        if value and value:find('license', 1, true) then
+            return value
+        end
+    end
+
+    return ('name:%s'):format(GetPlayerName(src) or src)
+end
+
 AddEventHandler('onResourceStart', function(resource)
     if resource ~= GetCurrentResourceName() then return end
     ensureFramework()

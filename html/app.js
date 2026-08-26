@@ -77,23 +77,54 @@ const DEMO = {
     bait_lake: 4,
     bait_river: 2,
   },
+  tasks: [
+    { id: 'catch_any', label: 'Fill the cooler', description: 'Land 8 fish of any kind today.', count: 8, progress: 5, claimed: false, reward: 175, rewardItems: [] },
+    { id: 'catch_ocean', label: 'Saltwater run', description: 'Catch 5 ocean fish.', count: 5, progress: 5, claimed: false, reward: 200, rewardItems: [] },
+    { id: 'catch_offshore', label: 'Go offshore', description: 'Catch 3 fish at an offshore hotspot.', count: 3, progress: 1, claimed: false, reward: 275, rewardItems: [] },
+    { id: 'catch_trophy', label: 'Trophy hunt', description: 'Land a rare or legendary fish.', count: 1, progress: 0, claimed: false, reward: 400, rewardItems: [{ item: 'bait_ocean', count: 5, label: 'Ocean Bait' }] },
+    { id: 'sell_cash', label: 'Cash out', description: 'Sell $400 worth of fish today.', count: 400, progress: 210, claimed: false, reward: 125, rewardItems: [] },
+    { id: 'rent_boat', label: 'Launch a skiff', description: 'Rent a boat from any fishing dock.', count: 1, progress: 1, claimed: true, reward: 75, rewardItems: [] },
+  ],
+  board: {
+    dailyFish: { rows: [{ rank: 1, name: 'MoodyNewt8638', value: 18, me: true }, { rank: 2, name: 'Kai', value: 14 }, { rank: 3, name: 'Reese', value: 9 }], you: { rank: 1, value: 18 } },
+    dailyMoney: { rows: [{ rank: 1, name: 'Kai', value: 1240 }, { rank: 2, name: 'MoodyNewt8638', value: 980, me: true }, { rank: 3, name: 'Reese', value: 410 }], you: { rank: 2, value: 980 } },
+    fish: { rows: [{ rank: 1, name: 'Kai', value: 220 }, { rank: 2, name: 'MoodyNewt8638', value: 87, me: true }], you: { rank: 2, value: 87 } },
+    money: { rows: [{ rank: 1, name: 'Kai', value: 18400 }, { rank: 2, name: 'MoodyNewt8638', value: 6120, me: true }], you: { rank: 2, value: 6120 } },
+  },
+  you: { fish: 87, money: 6120, dailyFish: 18, dailyMoney: 980 },
+  resetsIn: 14600,
 };
+
+const BOARD_TABS = [
+  { id: 'today', label: 'Today' },
+  { id: 'all', label: 'All time' },
+];
 
 const state = {
   view: 'shop',
   tab: 'all',
   query: '',
   qty: {},
-  shop: { label: 'Del Perro Tackle', subtitle: 'Ocean outfitter', views: ['shop', 'sell'] },
+  shop: { label: 'Del Perro Tackle', subtitle: 'Ocean outfitter', views: ['shop', 'sell', 'tasks', 'board'] },
   player: { name: 'Angler', cash: 0 },
   catalog: [],
   fish: [],
   equipment: {},
+  tasks: [],
+  board: { dailyFish: { rows: [] }, dailyMoney: { rows: [] }, fish: { rows: [] }, money: { rows: [] } },
+  you: { fish: 0, money: 0, dailyFish: 0, dailyMoney: 0 },
+  resetsIn: 0,
   busy: false,
 };
 
 function money(n) {
   return '$' + Math.floor(Number(n) || 0).toLocaleString('en-US');
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[ch]));
 }
 
 function initials(name) {
@@ -143,6 +174,13 @@ function mockNui(name, payload) {
     state.fish = [];
     return { ok: true, total, refresh: currentPayload() };
   }
+  if (name === 'claimTask') {
+    const task = state.tasks.find((t) => t.id === payload.id);
+    if (!task || task.claimed || task.progress < task.count) return { ok: false };
+    task.claimed = true;
+    state.player.cash += task.reward || 0;
+    return { ok: true, money: task.reward, label: task.label, refresh: currentPayload() };
+  }
   return currentPayload();
 }
 
@@ -153,6 +191,10 @@ function currentPayload() {
     catalog: state.catalog,
     fish: state.fish,
     equipment: state.equipment,
+    tasks: state.tasks,
+    board: state.board,
+    you: state.you,
+    resetsIn: state.resetsIn,
   };
 }
 
@@ -183,6 +225,11 @@ function applyPayload(payload) {
     ? payload.equipment
     : (payload.equipment || {});
 
+  if (payload.tasks) state.tasks = toArray(payload.tasks);
+  if (payload.board) state.board = payload.board;
+  if (payload.you) state.you = payload.you;
+  if (payload.resetsIn != null) state.resetsIn = Number(payload.resetsIn) || 0;
+
   playerNameEl.textContent = state.player.name;
   playerAvatarEl.textContent = initials(state.player.name);
   render();
@@ -190,7 +237,7 @@ function applyPayload(payload) {
 
 function setView(view) {
   state.view = view;
-  state.tab = 'all';
+  state.tab = view === 'board' ? 'today' : 'all';
   state.query = '';
   search.value = '';
   document.querySelectorAll('.nav-btn').forEach((btn) => {
@@ -217,23 +264,52 @@ function countOwned(predicate) {
   }, 0);
 }
 
+function formatReset(seconds) {
+  seconds = Math.max(0, Math.floor(Number(seconds) || 0));
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function rankLabel(rank) {
+  return rank ? `#${rank}` : '—';
+}
+
 function renderStats() {
   const gear = countOwned((item) => item.category !== 'bait');
   const bait = countOwned((item) => item.category === 'bait');
   const fishCount = state.fish.reduce((a, f) => a + f.count, 0);
   const value = state.fish.reduce((a, f) => a + f.price * f.count, 0);
+  const done = state.tasks.filter((t) => t.progress >= t.count).length;
+  const claimed = state.tasks.filter((t) => t.claimed).length;
 
-  const cards = state.view === 'shop'
-    ? [
-        { label: 'Cash on hand', value: money(state.player.cash), hint: 'WALLET' },
-        { label: 'Tackle owned', value: String(gear), hint: 'GEAR' },
-        { label: 'Bait remaining', value: String(bait), hint: 'BAIT' },
-      ]
-    : [
-        { label: 'Cash on hand', value: money(state.player.cash), hint: 'WALLET' },
-        { label: 'Fish in pack', value: String(fishCount), hint: 'CATCH' },
-        { label: 'Market value', value: money(value), hint: 'PAYOUT' },
-      ];
+  let cards;
+  if (state.view === 'shop') {
+    cards = [
+      { label: 'Cash on hand', value: money(state.player.cash), hint: 'WALLET' },
+      { label: 'Tackle owned', value: String(gear), hint: 'GEAR' },
+      { label: 'Bait remaining', value: String(bait), hint: 'BAIT' },
+    ];
+  } else if (state.view === 'sell') {
+    cards = [
+      { label: 'Cash on hand', value: money(state.player.cash), hint: 'WALLET' },
+      { label: 'Fish in pack', value: String(fishCount), hint: 'CATCH' },
+      { label: 'Market value', value: money(value), hint: 'PAYOUT' },
+    ];
+  } else if (state.view === 'tasks') {
+    cards = [
+      { label: 'Tasks done', value: `${done}/${state.tasks.length || 0}`, hint: 'TODAY' },
+      { label: 'Rewards claimed', value: String(claimed), hint: 'CLAIMED' },
+      { label: 'Resets in', value: formatReset(state.resetsIn), hint: 'DAILY' },
+    ];
+  } else {
+    cards = [
+      { label: 'Fish today', value: String(state.you.dailyFish || 0), hint: 'CATCH' },
+      { label: 'Sold today', value: money(state.you.dailyMoney || 0), hint: 'CASH' },
+      { label: 'Your fish rank', value: rankLabel(state.board.dailyFish && state.board.dailyFish.you && state.board.dailyFish.you.rank), hint: 'TODAY' },
+    ];
+  }
 
   stats.innerHTML = cards.map((c) => `
     <article class="stat">
@@ -245,7 +321,15 @@ function renderStats() {
 }
 
 function renderTabs() {
-  const tabs = state.view === 'shop' ? CATEGORIES : SELL_TABS;
+  const toolbar = document.querySelector('.toolbar');
+  toolbar.classList.toggle('search-hidden', state.view === 'tasks' || state.view === 'board');
+
+  let tabs;
+  if (state.view === 'shop') tabs = CATEGORIES;
+  else if (state.view === 'sell') tabs = SELL_TABS;
+  else if (state.view === 'board') tabs = BOARD_TABS;
+  else tabs = [];
+
   tabsEl.innerHTML = tabs.map((tab) => `
     <button type="button" class="tab ${state.tab === tab.id ? 'active' : ''}" data-tab="${tab.id}">${tab.label}</button>
   `).join('') + (state.view === 'sell' ? '<button type="button" class="tab" data-tab="sellall">Sell all</button>' : '');
@@ -331,19 +415,90 @@ function renderSell() {
   }).join('');
 }
 
+function renderTasks() {
+  const items = state.tasks.filter((item) => matchesQuery(item));
+  if (!items.length) {
+    content.innerHTML = `<div class="empty"><strong>No daily tasks</strong><p>Come back after the next reset.</p></div>`;
+    return;
+  }
+
+  content.innerHTML = items.map((task) => {
+    const pct = Math.min(100, Math.round(((task.progress || 0) / (task.count || 1)) * 100));
+    const ready = !task.claimed && (task.progress || 0) >= task.count;
+    const extras = (task.rewardItems || []).map((item) => `${item.count}x ${item.label}`).join(', ');
+    let action = `<button type="button" class="btn" disabled>In progress</button>`;
+    if (task.claimed) action = `<button type="button" class="btn ghost" disabled>Claimed</button>`;
+    else if (ready) action = `<button type="button" class="btn" data-act="claim">Claim ${money(task.reward)}</button>`;
+    return `
+      <article class="card task-card" data-task="${task.id}">
+        <div class="card-head">
+          <div class="icon">${ICONS.fish}</div>
+          <span class="badge ${task.claimed ? 'uncommon' : ready ? 'legendary' : ''}">${task.progress}/${task.count}</span>
+        </div>
+        <div>
+          <h3>${task.label}</h3>
+          <p>${task.description}</p>
+        </div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        <div class="meta-row">
+          <div class="price">${money(task.reward)} <span>reward</span></div>
+          <span class="badge">${extras || 'Cash'}</span>
+        </div>
+        ${action}
+      </article>
+    `;
+  }).join('');
+}
+
+function renderBoard() {
+  const daily = state.tab !== 'all';
+  const fish = daily ? state.board.dailyFish : state.board.fish;
+  const cash = daily ? state.board.dailyMoney : state.board.money;
+  const fishMoney = (block) => {
+    const rows = (block && block.rows) || [];
+    if (!rows.length) {
+      return `<div class="empty" style="min-height:160px"><strong>No scores yet</strong><p>Catch or sell fish to appear here.</p></div>`;
+    }
+    const you = block.you || {};
+    const isMoney = block === cash;
+    return rows.map((row) => `
+      <div class="board-row ${row.me ? 'me' : ''}">
+        <b>${row.rank}</b>
+        <span>${escapeHtml(row.name)}</span>
+        <span class="value">${isMoney ? money(row.value) : row.value}</span>
+      </div>
+    `).join('') + `<div class="board-you">You · ${rankLabel(you.rank)} · ${isMoney ? money(you.value || 0) : (you.value || 0)}</div>`;
+  };
+
+  content.innerHTML = `
+    <section class="board-col">
+      <h3>Most fish ${daily ? 'today' : 'all time'}</h3>
+      ${fishMoney(fish)}
+    </section>
+    <section class="board-col">
+      <h3>Most money ${daily ? 'today' : 'all time'}</h3>
+      ${fishMoney(cash)}
+    </section>
+  `;
+}
+
 function render() {
   subtitleEl.textContent = state.shop.subtitle || 'Tackle & market';
+  content.classList.toggle('tasks-view', state.view === 'tasks');
+  content.classList.toggle('board-view', state.view === 'board');
   renderStats();
   renderTabs();
   if (state.view === 'shop') renderShop();
-  else renderSell();
+  else if (state.view === 'sell') renderSell();
+  else if (state.view === 'tasks') renderTasks();
+  else renderBoard();
 }
 
 function openUI(payload) {
   payload = payload || {};
   if (payload.shop) state.shop = payload.shop;
   state.view = payload.view || 'shop';
-  state.tab = 'all';
+  state.tab = state.view === 'board' ? 'today' : 'all';
   state.query = '';
   state.qty = {};
   search.value = '';
@@ -401,8 +556,17 @@ content.addEventListener('click', async (e) => {
   const card = e.target.closest('.card');
   const btn = e.target.closest('button');
   if (!card || !btn || state.busy) return;
-  const itemName = card.dataset.item;
   const act = btn.dataset.act;
+
+  if (act === 'claim') {
+    state.busy = true;
+    const result = await nui('claimTask', { id: card.dataset.task });
+    await handleResult(result, result && result.ok ? `Claimed ${result.label}` : '');
+    state.busy = false;
+    return;
+  }
+
+  const itemName = card.dataset.item;
   const item = state.view === 'shop'
     ? state.catalog.find((i) => i.item === itemName)
     : state.fish.find((i) => i.item === itemName);
@@ -458,7 +622,7 @@ if (!inFiveM) {
   document.body.classList.add('preview');
   openUI({
     view: 'shop',
-    shop: { label: 'Del Perro Tackle', subtitle: 'Ocean outfitter', views: ['shop', 'sell'] },
+    shop: { label: 'Del Perro Tackle', subtitle: 'Ocean outfitter', views: ['shop', 'sell', 'tasks', 'board'] },
     ...DEMO,
   });
 }

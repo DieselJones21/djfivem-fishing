@@ -7,8 +7,37 @@ local function isDead()
     return IsEntityDead(ped) or IsPedFatallyInjured(ped) or LocalPlayer.state.dead
 end
 
+local function inBoat()
+    return Config.AllowBoatFishing ~= false and cache.vehicle and GetVehicleClass(cache.vehicle) == 14
+end
+
+local function blockedVehicle()
+    return cache.vehicle and not inBoat()
+end
+
+local frozenBoat
+
+local function freezeBoat(state)
+    if frozenBoat and DoesEntityExist(frozenBoat) then
+        FreezeEntityPosition(frozenBoat, false)
+        if not state then
+            SetVehicleEngineOn(frozenBoat, true, true, false)
+        end
+    end
+    frozenBoat = nil
+    if not state then return end
+    local veh = cache.vehicle
+    if veh and GetVehicleClass(veh) == 14 then
+        FreezeEntityPosition(veh, true)
+        frozenBoat = veh
+    end
+end
+
 local function facingWater()
     if not Config.RequireFacingWater then return true end
+    if Config.AllowBoatFishing ~= false and cache.vehicle and GetVehicleClass(cache.vehicle) == 14 then
+        return true
+    end
 
     local ped = cache.ped
     local probe = GetOffsetFromEntityInWorldCoords(ped, 0.0, 4.0, 0.4)
@@ -83,7 +112,7 @@ function StartFishing(preferredRod)
         return
     end
 
-    if cache.vehicle then
+    if blockedVehicle() then
         Notify('notify_vehicle', 'error')
         return
     end
@@ -105,11 +134,16 @@ function StartFishing(preferredRod)
 
     fishing = true
     LocalPlayer.state:set('fishing', true, false)
-    startScenario()
-    Wait(700)
+    local boatFishing = inBoat()
+    if boatFishing then
+        freezeBoat(true)
+    else
+        startScenario()
+        Wait(700)
+    end
 
     while fishing do
-        if isDead() or cache.vehicle then
+        if isDead() or blockedVehicle() then
             break
         end
 
@@ -207,7 +241,10 @@ function StartFishing(preferredRod)
 
     fishing = false
     LocalPlayer.state:set('fishing', false, false)
-    stopScenario()
+    freezeBoat(false)
+    if not inBoat() then
+        stopScenario()
+    end
     lib.callback.await('djfivem-fishing:cancelCast', false)
 end
 
@@ -239,6 +276,7 @@ AddEventHandler('onResourceStop', function(resource)
     if resource ~= GetCurrentResourceName() then return end
     if fishing then
         fishing = false
+        freezeBoat(false)
         stopScenario()
     end
 end)
