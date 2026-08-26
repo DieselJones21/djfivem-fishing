@@ -110,9 +110,10 @@ Config.Equipment = {
     },
     fishing_line = {
         label = 'Fishing Line',
-        description = 'Mono line. One spool is used every time a fish hits the bait.',
+        description = 'Mono spool. Each spool lasts 5 bites before you need another.',
         category = 'line',
         price = 4,
+        uses = 5,
         weight = 20,
     },
     bait_ocean = {
@@ -294,33 +295,96 @@ Config.Fish = {
 -- Fishing waters (stand on shore, face the water, press G)
 ----------------------------------------------------------------
 Config.Zones = {
+    -- Ocean
     { name = 'Del Perro Coast', type = 'ocean', coords = vec3(-1850.0, -1275.0, 8.0), radius = 190.0 },
     { name = 'Vespucci Beach', type = 'ocean', coords = vec3(-1405.0, -1450.0, 2.0), radius = 170.0 },
     { name = 'Chumash Pier', type = 'ocean', coords = vec3(-3426.0, 967.0, 8.3), radius = 140.0 },
+    { name = 'North Chumash', type = 'ocean', coords = vec3(-3236.0, 1108.0, 2.5), radius = 130.0 },
+    { name = 'Pacific Bluffs', type = 'ocean', coords = vec3(-3030.0, 97.0, 11.0), radius = 150.0 },
     { name = 'Paleto Cove', type = 'ocean', coords = vec3(-1605.0, 5255.0, 3.0), radius = 170.0 },
+    { name = 'Paleto Bay Pier', type = 'ocean', coords = vec3(-247.0, 6568.0, 10.0), radius = 130.0 },
+    { name = 'Hookies Outlook', type = 'ocean', coords = vec3(-2255.0, 4290.0, 2.0), radius = 140.0 },
     { name = 'Procopio Beach', type = 'ocean', coords = vec3(1540.0, 6625.0, 2.0), radius = 160.0 },
     { name = 'El Gordo Lighthouse', type = 'ocean', coords = vec3(3315.0, 5184.0, 18.0), radius = 160.0 },
+    { name = 'Cape Catfish', type = 'ocean', coords = vec3(3865.0, 4463.0, 2.7), radius = 130.0 },
+    { name = 'San Chianski Shore', type = 'ocean', coords = vec3(2836.0, 4092.0, 6.8), radius = 150.0 },
+    { name = 'Palomino Highlands', type = 'ocean', coords = vec3(2828.0, -623.0, 1.5), radius = 140.0 },
     { name = 'La Puerta Docks', type = 'ocean', coords = vec3(-778.0, -1425.0, 1.0), radius = 140.0 },
+    { name = 'Elysian Island', type = 'ocean', coords = vec3(127.0, -2695.0, 6.0), radius = 140.0 },
+    { name = 'Port of LS', type = 'ocean', coords = vec3(1134.0, -2904.0, 5.9), radius = 150.0 },
+    { name = 'Del Perro Pier', type = 'ocean', coords = vec3(-1604.0, -1108.0, 13.0), radius = 130.0 },
+    { name = 'Vespucci Canals', type = 'ocean', coords = vec3(-1005.0, -980.0, 2.0), radius = 120.0 },
+    { name = 'Humane Labs Shore', type = 'ocean', coords = vec3(3420.0, 3758.0, 30.0), radius = 150.0 },
+    { name = 'Paleto Beach', type = 'ocean', coords = vec3(-140.0, 6350.0, 10.0), radius = 140.0 },
+    { name = 'Great Ocean Highway', type = 'ocean', coords = vec3(-2505.0, 3650.0, 3.0), radius = 160.0 },
+    { name = 'NOOSE Beach', type = 'ocean', coords = vec3(2490.0, -380.0, 3.0), radius = 140.0 },
+    { name = 'Terminal Docks', type = 'ocean', coords = vec3(582.0, -3118.0, 6.0), radius = 140.0 },
 
+    -- Lakes
     { name = 'Alamo Sea', type = 'lake', coords = vec3(1300.0, 4220.0, 33.0), radius = 420.0 },
     { name = 'Alamo Sea West', type = 'lake', coords = vec3(714.0, 4094.0, 34.0), radius = 180.0 },
+    { name = 'Alamo Sea South', type = 'lake', coords = vec3(1732.0, 3988.0, 31.8), radius = 180.0 },
+    { name = 'Alamo Sea East', type = 'lake', coords = vec3(2140.0, 3910.0, 31.0), radius = 170.0 },
+    { name = 'Stab City Shore', type = 'lake', coords = vec3(80.0, 3705.0, 39.5), radius = 160.0 },
     { name = 'Land Act Reservoir', type = 'lake', coords = vec3(1662.0, 42.0, 161.0), radius = 160.0 },
     { name = 'Mirror Park Lake', type = 'lake', coords = vec3(1108.0, -655.0, 57.0), radius = 85.0 },
     { name = 'Vinewood Reservoir', type = 'lake', coords = vec3(1072.0, -324.0, 67.0), radius = 70.0 },
+    { name = 'Lago Zancudo', type = 'lake', coords = vec3(-2084.0, 2612.0, 2.0), radius = 180.0 },
+    { name = 'Galilee', type = 'lake', coords = vec3(1310.0, 4368.0, 39.0), radius = 160.0 },
+    { name = 'Sandy Shores Jetty', type = 'lake', coords = vec3(1544.0, 3915.0, 31.5), radius = 150.0 },
 
+    -- Rivers
     { name = 'Cassidy Creek', type = 'river', coords = vec3(-840.0, 4430.0, 16.0), radius = 220.0 },
     { name = 'Raton Canyon', type = 'river', coords = vec3(-1518.0, 1516.0, 111.0), radius = 150.0 },
     { name = 'Zancudo River', type = 'river', coords = vec3(-484.0, 2930.0, 27.0), radius = 200.0 },
+    { name = 'Zancudo River South', type = 'river', coords = vec3(-1134.0, 2685.0, 18.0), radius = 160.0 },
     { name = 'Grapeseed River', type = 'river', coords = vec3(1670.0, 4508.0, 30.0), radius = 180.0 },
-    { name = 'Chilliad River', type = 'river', coords = vec3(-474.0, 4395.0, 31.0), radius = 160.0 },
+    { name = 'Grapeseed Canal', type = 'river', coords = vec3(1846.0, 4784.0, 40.0), radius = 140.0 },
+    { name = 'Chiliad River', type = 'river', coords = vec3(-474.0, 4395.0, 31.0), radius = 160.0 },
+    { name = 'Paleto River', type = 'river', coords = vec3(-219.0, 3902.0, 37.0), radius = 150.0 },
+    { name = 'LS River La Mesa', type = 'river', coords = vec3(752.0, -1505.0, 20.0), radius = 140.0 },
+    { name = 'Cypress Canal', type = 'river', coords = vec3(920.0, -2210.0, 30.0), radius = 130.0 },
+    { name = 'Banham Canyon Creek', type = 'river', coords = vec3(-1465.0, 2148.0, 54.0), radius = 140.0 },
+    { name = 'Tongva Valley', type = 'river', coords = vec3(-1578.0, 2105.0, 72.0), radius = 140.0 },
+    { name = 'LS River Downtown', type = 'river', coords = vec3(400.0, -1600.0, 20.0), radius = 140.0 },
+    { name = 'Paleto Creek', type = 'river', coords = vec3(-575.0, 4428.0, 31.0), radius = 140.0 },
+    { name = 'Tataviam Creek', type = 'river', coords = vec3(2588.0, 615.0, 98.0), radius = 130.0 },
 }
 
+for i = 1, #Config.Zones do
+    local zone = Config.Zones[i]
+    zone.radiusSq = zone.radius * zone.radius
+end
+
+-- Named map blips for every fishing zone. Radius overlays are off by default (they are expensive).
 Config.ShowZoneBlips = true
+Config.ShowZoneRadius = false
 Config.ZoneBlip = {
-    ocean = { color = 3, alpha = 80 },
-    lake = { color = 2, alpha = 80 },
-    river = { color = 4, alpha = 80 },
+    sprite = 68,
+    scale = 0.7,
+    shortRange = true,
+    ocean = { color = 3, label = 'Ocean Fishing' },
+    lake = { color = 2, label = 'Lake Fishing' },
+    river = { color = 5, label = 'River Fishing' },
 }
+
+-- Stream shop peds in only when nearby
+Config.PedSpawn = {
+    distance = 85.0,
+    despawn = 125.0,
+    interval = 1500,
+}
+
+Config.ZoneCheck = {
+    inside = 850,
+    nearby = 1500,
+    far = 2500,
+    nearbyRadius = 220.0,
+}
+
+Config.PedSpawn.distanceSq = Config.PedSpawn.distance * Config.PedSpawn.distance
+Config.PedSpawn.despawnSq = Config.PedSpawn.despawn * Config.PedSpawn.despawn
+Config.ZoneCheck.nearbySq = Config.ZoneCheck.nearbyRadius * Config.ZoneCheck.nearbyRadius
 
 ----------------------------------------------------------------
 -- Tackle shop / fish buyer peds

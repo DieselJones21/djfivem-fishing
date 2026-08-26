@@ -55,7 +55,7 @@ const DEMO = {
     { item: 'fishing_reel_basic', label: 'Spin Reel', description: 'Reliable spinning reel. Keeps line tension, no extra assist.', category: 'reels', price: 125, uses: 50 },
     { item: 'fishing_reel_pro', label: 'Baitcaster', description: 'Smoother drag. Makes skill checks a little more forgiving.', category: 'reels', price: 380, uses: 100 },
     { item: 'fishing_reel_elite', label: 'Tournament Reel', description: 'Saltwater drag system. Biggest skill-check window in the kit.', category: 'reels', price: 980, uses: 180 },
-    { item: 'fishing_line', label: 'Fishing Line', description: 'Mono line. One spool is used every time a fish hits the bait.', category: 'line', price: 4 },
+    { item: 'fishing_line', label: 'Fishing Line', description: 'Mono spool. Each spool lasts 5 bites before you need another.', category: 'line', price: 4, uses: 5 },
     { item: 'bait_ocean', label: 'Ocean Bait', description: 'Cut squid and oily chunks. Required to fish the ocean.', category: 'bait', price: 8 },
     { item: 'bait_lake', label: 'Lake Bait', description: 'Live worms and panfish jigs. Required on lakes.', category: 'bait', price: 5 },
     { item: 'bait_river', label: 'River Bait', description: 'Roe sacks and spinner bait. Required on rivers.', category: 'bait', price: 6 },

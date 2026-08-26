@@ -3,9 +3,28 @@ math.randomseed(os.time() % 2147483646)
 
 local pending = {}
 local lastResolve = {}
+local shopsById = {}
+local fishByZone = { ocean = {}, lake = {}, river = {} }
+local cachedCatalog
 
 local RODS = Config.RodOrder
 local REELS = Config.ReelOrder
+local LINES = { 'fishing_line' }
+local ZONES = Config.Zones
+local ZONE_COUNT = #ZONES
+
+for i = 1, #Config.Shops do
+    local shop = Config.Shops[i]
+    shop.pos = vec3(shop.coords.x, shop.coords.y, shop.coords.z)
+    shopsById[shop.id] = shop
+end
+
+for name, data in pairs(Config.Fish) do
+    local bucket = fishByZone[data.zone]
+    if bucket then
+        bucket[#bucket + 1] = { name = name, data = data }
+    end
+end
 
 local function now()
     return os.clock()
@@ -18,28 +37,25 @@ local function playerCoords(src)
 end
 
 local function getShop(shopId)
-    for i = 1, #Config.Shops do
-        if Config.Shops[i].id == shopId then
-            return Config.Shops[i]
-        end
-    end
+    return shopsById[shopId]
 end
 
 local function isNearShop(src, shopId)
     local shop = getShop(shopId)
     local coords = playerCoords(src)
     if not shop or not coords then return false end
-    local shopPos = vec3(shop.coords.x, shop.coords.y, shop.coords.z)
-    return #(coords - shopPos) <= (Config.ShopDistance + 2.0)
+    return #(coords - shop.pos) <= (Config.ShopDistance + 2.0)
 end
 
 local function getZoneAt(src, expectedType)
     local coords = playerCoords(src)
     if not coords then return nil end
 
-    for i = 1, #Config.Zones do
-        local zone = Config.Zones[i]
-        if #(coords - zone.coords) <= zone.radius then
+    for i = 1, ZONE_COUNT do
+        local zone = ZONES[i]
+        local dx = coords.x - zone.coords.x
+        local dy = coords.y - zone.coords.y
+        if (dx * dx + dy * dy) <= zone.radiusSq then
             if not expectedType or zone.type == expectedType then
                 return zone
             end
@@ -64,14 +80,79 @@ local function findBest(src, names)
     for i = 1, #names do
         local name = names[i]
         local slots = slotList(exports.ox_inventory:Search(src, 'slots', name))
+        local best, bestScore
         for s = 1, #slots do
             local slot = slots[s]
             local durability = slot.metadata and slot.metadata.durability
-            if slot.count and slot.count > 0 and (durability == nil or durability > 0) then
-                return name, slot
+            local usesLeft = slot.metadata and slot.metadata.uses
+            if slot.count and slot.count > 0 and (usesLeft == nil or usesLeft > 0) and (durability == nil or durability > 0) then
+                -- Prefer opened / more worn items so a started spool finishes first.
+                local score = (type(usesLeft) == 'number' and usesLeft or (type(durability) == 'number' and durability or 101)) * 1000 + (slot.count or 1)
+                if not bestScore or score < bestScore then
+                    best, bestScore = slot, score
+                end
             end
         end
+        if best then
+            return name, best
+        end
     end
+end
+
+local function starterMetadata(item)
+    if not item or not item.uses then return nil end
+    if item.category == 'line' then
+        return { uses = item.uses, durability = 100 }
+    end
+    return { durability = 100 }
+end
+
+local function lineUsesFromSlot(slot)
+    local maxUses = Config.Equipment.fishing_line and Config.Equipment.fishing_line.uses or 5
+    local uses = slot.metadata and slot.metadata.uses
+    if type(uses) == 'number' then
+        return uses, maxUses
+    end
+    local durability = slot.metadata and slot.metadata.durability
+    if type(durability) == 'number' then
+        return math.max(1, math.ceil((durability / 100) * maxUses)), maxUses
+    end
+    return maxUses, maxUses
+end
+
+local function lineMetadata(uses, maxUses)
+    return {
+        uses = uses,
+        durability = math.floor((uses / maxUses) * 1000 + 0.5) / 10,
+    }
+end
+
+local function consumeLine(src)
+    local name, slot = findBest(src, LINES)
+    if not slot then return false end
+
+    local uses, maxUses = lineUsesFromSlot(slot)
+    uses = uses - 1
+
+    -- Split one spool off a stack so the remaining spools keep full uses.
+    if (slot.count or 1) > 1 then
+        local removed = exports.ox_inventory:RemoveItem(src, name, 1, nil, slot.slot)
+        if not removed then return false end
+        if uses > 0 then
+            exports.ox_inventory:AddItem(src, name, 1, lineMetadata(uses, maxUses))
+        end
+        return true
+    end
+
+    if uses <= 0 then
+        return exports.ox_inventory:RemoveItem(src, name, 1, nil, slot.slot) and true or false
+    end
+
+    local metadata = slot.metadata or {}
+    metadata.uses = uses
+    metadata.durability = lineMetadata(uses, maxUses).durability
+    exports.ox_inventory:SetMetadata(src, slot.slot, metadata)
+    return true
 end
 
 local function consumeDurability(src, slot, itemName, uses)
@@ -97,6 +178,8 @@ local function baitFor(zoneType)
 end
 
 local function catalog()
+    if cachedCatalog then return cachedCatalog end
+
     local items = {}
     for i = 1, #Config.ShopCatalogOrder do
         local name = Config.ShopCatalogOrder[i]
@@ -112,6 +195,7 @@ local function catalog()
             }
         end
     end
+    cachedCatalog = items
     return items
 end
 
@@ -164,26 +248,29 @@ local function shopPayload(src)
 end
 
 local function weightedFish(zoneType, rareBonus)
-    local pool = {}
-    local total = 0
+    local pool = fishByZone[zoneType]
+    if not pool or #pool == 0 then return nil end
 
-    for name, data in pairs(Config.Fish) do
-        if data.zone == zoneType then
-            local weight = data.weight
-            if data.rarity == 'rare' or data.rarity == 'legendary' then
-                weight = weight + (rareBonus or 0)
-            end
-            total = total + weight
-            pool[#pool + 1] = { name = name, weight = weight, data = data }
+    local total = 0
+    local weighted = {}
+    rareBonus = rareBonus or 0
+
+    for i = 1, #pool do
+        local entry = pool[i]
+        local weight = entry.data.weight
+        if rareBonus > 0 and (entry.data.rarity == 'rare' or entry.data.rarity == 'legendary') then
+            weight = weight + rareBonus
         end
+        total = total + weight
+        weighted[i] = weight
     end
 
-    if total <= 0 or #pool == 0 then return nil end
+    if total <= 0 then return nil end
 
     local roll = math.random() * total
     local acc = 0
     for i = 1, #pool do
-        acc = acc + pool[i].weight
+        acc = acc + weighted[i]
         if roll <= acc then
             return pool[i]
         end
@@ -227,10 +314,7 @@ lib.callback.register('djfivem-fishing:buy', function(source, shopId, itemName, 
         return { ok = false, error = 'notify_cannot_carry' }
     end
 
-    local metadata
-    if item.uses then
-        metadata = { durability = 100 }
-    end
+    local metadata = starterMetadata(item)
 
     local added = exports.ox_inventory:AddItem(source, itemName, amount, metadata)
     if not added then
@@ -363,7 +447,8 @@ lib.callback.register('djfivem-fishing:prepareCast', function(source, info)
         return { ok = false, error = 'notify_need_reel' }
     end
 
-    if (exports.ox_inventory:GetItemCount(source, 'fishing_line') or 0) < 1 then
+    local lineName, lineSlot = findBest(source, LINES)
+    if not lineName then
         return { ok = false, error = 'notify_need_line' }
     end
 
@@ -380,6 +465,7 @@ lib.callback.register('djfivem-fishing:prepareCast', function(source, info)
         rodSlot = rodSlot.slot,
         reel = reelName,
         reelSlot = reelSlot.slot,
+        lineSlot = lineSlot.slot,
         bait = baitName,
         stage = 'prepared',
         expires = now() + 90,
@@ -443,12 +529,11 @@ lib.callback.register('djfivem-fishing:resolveCast', function(source, success, r
         return { ok = false, error = 'notify_got_away' }
     end
 
-    -- Bait and line are spent once a fish actually hits.
+    -- Bait and one line use are spent once a fish actually hits.
     local baitRemoved = exports.ox_inventory:RemoveItem(source, cast.bait, 1)
-    local lineRemoved = exports.ox_inventory:RemoveItem(source, 'fishing_line', 1)
-    if not baitRemoved or not lineRemoved then
+    local lineUsed = consumeLine(source)
+    if not baitRemoved or not lineUsed then
         if baitRemoved then exports.ox_inventory:AddItem(source, cast.bait, 1) end
-        if lineRemoved then exports.ox_inventory:AddItem(source, 'fishing_line', 1) end
         return { ok = false, error = 'notify_need_bait' }
     end
 
@@ -535,8 +620,7 @@ lib.addCommand('fishingkit', {
 
     for i = 1, #kit do
         local item, count = kit[i][1], kit[i][2]
-        local meta = Config.Equipment[item] and Config.Equipment[item].uses and { durability = 100 } or nil
-        exports.ox_inventory:AddItem(source, item, count, meta)
+        exports.ox_inventory:AddItem(source, item, count, starterMetadata(Config.Equipment[item]))
     end
 
     TriggerClientEvent('ox_lib:notify', source, {
