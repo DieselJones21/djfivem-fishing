@@ -3,12 +3,83 @@ lib.locale()
 local dockPeds = {}
 local dockBlips = {}
 
+local FUEL_SCRIPTS = {
+    { 'LegacyFuel', 'SetFuel' },
+    { 'legacyfuel', 'SetFuel' },
+    { 'cdn-fuel', 'SetFuel' },
+    { 'ps-fuel', 'SetFuel' },
+    { 'lc_fuel', 'SetFuel' },
+    { 'ox_fuel', 'SetFuel' },
+    { 'qs-fuel', 'SetFuel' },
+    { 'qs-fuelstations', 'SetFuel' },
+    { 'nd_fuel', 'SetFuel' },
+    { 'BigDaddy-Fuel', 'SetFuel' },
+    { 'x-fuel', 'SetFuel' },
+}
+
 local function notify(key, nType, ...)
     lib.notify({
         title = 'Boat Rental',
         description = locale(key, ...),
         type = nType or 'inform',
     })
+end
+
+local function fillFuel(veh, amount)
+    amount = amount or Config.BoatRental.fuel or 100.0
+    SetVehicleFuelLevel(veh, amount + 0.0)
+    pcall(function()
+        Entity(veh).state:set('fuel', amount, true)
+    end)
+    pcall(function()
+        DecorSetFloat(veh, '_FUEL_LEVEL', amount + 0.0)
+    end)
+    for i = 1, #FUEL_SCRIPTS do
+        local resource, method = FUEL_SCRIPTS[i][1], FUEL_SCRIPTS[i][2]
+        if GetResourceState(resource) == 'started' then
+            pcall(function()
+                exports[resource][method](veh, amount)
+            end)
+        end
+    end
+end
+
+local function spawnRentalBoat(info)
+    local hash = info.model or joaat(info.spawnName)
+    if not lib.requestModel(hash, 10000) then
+        return nil, nil, 'notify_boat_model'
+    end
+
+    local spawn = info.spawn
+    local veh = CreateVehicle(hash, spawn.x, spawn.y, spawn.z, spawn.w, true, true)
+    local deadline = GetGameTimer() + 5000
+    while (not veh or veh == 0 or not DoesEntityExist(veh)) and GetGameTimer() < deadline do
+        Wait(50)
+    end
+    if not veh or veh == 0 or not DoesEntityExist(veh) then
+        SetModelAsNoLongerNeeded(hash)
+        return nil, nil, 'notify_boat_fail'
+    end
+
+    SetEntityAsMissionEntity(veh, true, true)
+    SetEntityHeading(veh, spawn.w)
+    SetVehicleEngineOn(veh, true, true, false)
+    SetVehicleUndriveable(veh, false)
+    SetVehicleHasBeenOwnedByPlayer(veh, true)
+    pcall(SetBoatAnchor, veh, false)
+    if info.plate then
+        SetVehicleNumberPlateText(veh, info.plate)
+    end
+    fillFuel(veh, info.fuel)
+    SetModelAsNoLongerNeeded(hash)
+
+    local netId = NetworkGetNetworkIdFromEntity(veh)
+    SetNetworkIdExistsOnAllMachines(netId, true)
+    SetNetworkIdCanMigrate(netId, true)
+    TaskWarpPedIntoVehicle(cache.ped, veh, -1)
+    Wait(150)
+    fillFuel(veh, info.fuel)
+    return netId, veh
 end
 
 local function createDockBlip(dock)
@@ -108,6 +179,42 @@ function ReturnBoat(dock)
     end
 end
 
+local function formatLeft(sec)
+    sec = math.floor(tonumber(sec) or 0)
+    if sec >= 3600 then
+        return ('%dh %dm left'):format(math.floor(sec / 3600), math.floor((sec % 3600) / 60))
+    end
+    if sec >= 60 then
+        return ('%dm %ds left'):format(math.floor(sec / 60), sec % 60)
+    end
+    return ('%ds left'):format(sec)
+end
+
+local function rentBoat(dock, boatId, durationId)
+    local authorized = lib.callback.await('djfivem-fishing:rentBoat', false, dock.id, boatId, durationId)
+    if not authorized or not authorized.ok then
+        notify(authorized and authorized.error or 'notify_boat_fail', 'error')
+        return
+    end
+
+    local netId, veh, spawnErr = spawnRentalBoat(authorized)
+    if not netId then
+        lib.callback.await('djfivem-fishing:abortBoat', false)
+        notify(spawnErr or 'notify_boat_fail', 'error')
+        return
+    end
+
+    local confirmed = lib.callback.await('djfivem-fishing:confirmBoat', false, netId)
+    if confirmed and confirmed.ok then
+        notify('notify_boat_rented', 'success', confirmed.label, confirmed.durationLabel or '', confirmed.price, confirmed.deposit)
+    else
+        if veh and DoesEntityExist(veh) then
+            DeleteEntity(veh)
+        end
+        notify(confirmed and confirmed.error or 'notify_boat_fail', 'error')
+    end
+end
+
 function OpenBoatMenu(dock)
     if IsFishing() or IsShopOpen() then return end
 
@@ -119,9 +226,7 @@ function OpenBoatMenu(dock)
 
     local options = {}
     if payload.rented then
-        local time = payload.rented.remaining
-            and ('%dm %ds left'):format(math.floor(payload.rented.remaining / 60), payload.rented.remaining % 60)
-            or locale('boat_until_return')
+        local time = payload.rented.remaining and formatLeft(payload.rented.remaining) or locale('boat_until_return')
         options[#options + 1] = {
             title = locale('boat_return'),
             description = locale('boat_return_desc', payload.rented.label, payload.rented.deposit or 0, time),
@@ -134,19 +239,32 @@ function OpenBoatMenu(dock)
 
     for i = 1, #payload.boats do
         local boat = payload.boats[i]
-        local disabled = payload.rented ~= nil or (payload.cash or 0) < (boat.price + boat.deposit)
         options[#options + 1] = {
             title = boat.label,
-            description = locale('boat_option_desc', boat.description, boat.price, boat.deposit),
+            description = boat.description,
             icon = 'ship',
-            disabled = disabled,
+            disabled = payload.rented ~= nil,
             onSelect = function()
-                local result = lib.callback.await('djfivem-fishing:rentBoat', false, dock.id, boat.id)
-                if result and result.ok then
-                    notify('notify_boat_rented', 'success', result.label, result.price, result.deposit)
-                else
-                    notify(result and result.error or 'notify_boat_fail', 'error')
+                local times = {}
+                for t = 1, #(boat.times or {}) do
+                    local slot = boat.times[t]
+                    times[#times + 1] = {
+                        title = slot.label,
+                        description = locale('boat_duration_desc', slot.price, slot.deposit, slot.minutes),
+                        icon = 'clock',
+                        disabled = payload.rented ~= nil or (payload.cash or 0) < slot.total,
+                        onSelect = function()
+                            rentBoat(dock, boat.id, slot.id)
+                        end,
+                    }
                 end
+                lib.registerContext({
+                    id = 'djfishing_boat_time',
+                    title = boat.label,
+                    menu = 'djfishing_boats',
+                    options = times,
+                })
+                lib.showContext('djfishing_boat_time')
             end,
         }
     end
@@ -188,7 +306,7 @@ function StartBoatDocks(useInteract)
     end)
 end
 
-RegisterNetEvent('djfivem-fishing:client:boardBoat', function(netId, plate)
+RegisterNetEvent('djfivem-fishing:client:boardBoat', function(netId, plate, fuel)
     if type(netId) ~= 'number' then return end
 
     local veh = lib.waitFor(function()
@@ -207,6 +325,7 @@ RegisterNetEvent('djfivem-fishing:client:boardBoat', function(netId, plate)
     if plate then
         SetVehicleNumberPlateText(veh, plate)
     end
+    fillFuel(veh, fuel)
     SetVehicleEngineOn(veh, true, true, false)
     TaskWarpPedIntoVehicle(cache.ped, veh, -1)
 end)
@@ -229,6 +348,9 @@ AddEventHandler('onResourceStop', function(resource)
 end)
 
 CreateThread(function()
+    pcall(function()
+        DecorRegister('_FUEL_LEVEL', 1)
+    end)
     local useInteract = GetResourceState('interact') == 'started'
     if not useInteract then
         pcall(function()

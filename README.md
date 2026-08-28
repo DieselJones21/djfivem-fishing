@@ -36,9 +36,9 @@ Shop peds are wired with `exports.interact:AddLocalEntityInteraction`. Look at t
 2. Walk into a marked fishing area (ocean / lake / river) and stand on the bank facing the water.
 3. Use the rod from inventory, press **G**, or run `/fish`.
 4. Wait out the cast and bite progress bars, then complete the **ox_lib skill check**. Harder fish (marlin, shark, striper, catfish) take more checks. Better reels open the success window.
-5. Correct bait is required: ocean bait on the coast, lake bait on lakes, river bait on rivers. Bait is used every bite. **Fishing line lasts 5 bites per spool** (the durability bar on the item shows remaining uses).
+5. Correct bait is required: ocean bait on the coast, lake bait on lakes, river bait on rivers. Bait is used every bite. **Fishing line lasts 20 bites per spool.** Rods and reels last hundreds of casts before they wear out.
 
-Every fishing zone has a named map blip (blue ocean, green lake, yellow river). **Red offshore blips** stay visible on the pause map so you can boat out to them. Shop and rental peds only spawn when you are nearby. Set `Config.ShowZoneRadius = true` if you also want the circle overlay.
+Shoreline spots do **not** get map blips (too much clutter). You still get a notify when you walk into a fishing area. **Shop blips**, **boat rental blips**, and **offshore fishing blips** stay on. Set `Config.ShowZoneBlips = true` if you want every shoreline mark back.
 
 Admin test kit: `/fishingkit` (ace `group.admin`).
 
@@ -52,13 +52,15 @@ Open any tackle shop and use the **Tasks** and **Board** tabs.
 
 ## Boat rentals
 
-Interact with a rental ped at **Vespucci / Puerto Del Sol**, **Chumash Pier**, **Paleto Bay**, or **Alamo Sea**. Pay the rental fee plus a deposit, then drive out to an offshore hotspot and fish from the boat (press **G**). Return the boat at a dock to get the deposit back. Rentals last 20 minutes by default (`Config.BoatRental.duration`).
+Interact with a rental ped at **Vespucci / Puerto Del Sol**, **Chumash Pier**, **Paleto Bay**, or **Alamo Sea**. Pick a **Freeman**, **Grady White**, or **26ft Yellowfin**, then a **real-time** duration (15 min, 30 min, 1 hour, or 2 hours). Boats spawn with a full tank. Return at a dock before the clock runs out to get the deposit back.
+
+Those three spawn names (`freeman`, `gradywhite`, `26ftyellowfin`) must be started on the server as addon vehicles.
 
 You can fish from boats. Cars still block casting.
 
 ## Waters and payouts
 
-Prices are server-side. Bait is spent every bite; one spool of line covers 5 bites. Common fish still profit without printing money.
+Prices are server-side. Bait is spent every bite; one spool of line covers 20 bites. Common fish still profit without printing money.
 
 | Water | Fish | Sell |
 | --- | --- | --- |
@@ -68,6 +70,6 @@ Prices are server-side. Bait is spent every bite; one spool of line covers 5 bit
 
 Tackle shops: Del Perro, Chumash Pier, Alamo Sea, Cassidy / river road, and a La Puerta fish buyer. Shop, sell, daily tasks, and the leaderboard share the same UI.
 
-Boat docks: Vespucci marina, Chumash, Paleto Bay, and Alamo Sea. Offshore marks are the red fish blips in open water.
+Boat docks: Vespucci marina, Chumash, Paleto Bay, and Alamo Sea. Offshore marks use the grouped red "Offshore Fishing" blips. Del Perro Tackle sits on the pier at `-1845.09, -1195.53, 19.18`.
 
 Move peds, docks, and zones in `config.lua`. Radius blips show legal fishing water; red shop blips mark tackle; teal/green boat blips mark rentals.

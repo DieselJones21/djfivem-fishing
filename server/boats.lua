@@ -1,7 +1,8 @@
 lib.locale()
 
 local docksById = {}
-local rentals = {} -- src -> rental
+local rentals = {}
+local pendingSpawns = {}
 
 for i = 1, #Config.BoatDocks do
     local dock = Config.BoatDocks[i]
@@ -35,7 +36,17 @@ local function deleteBoat(entity)
     end
 end
 
+local function refundPending(src)
+    local pending = pendingSpawns[src]
+    if not pending then return end
+    if pending.total and pending.total > 0 then
+        Bridge.AddMoney(src, pending.total)
+    end
+    pendingSpawns[src] = nil
+end
+
 local function clearRental(src, refund)
+    refundPending(src)
     local rental = rentals[src]
     if not rental then return end
     deleteBoat(rental.entity)
@@ -59,32 +70,31 @@ local function giveKeys(src, entity, plate)
     TriggerClientEvent('vehiclekeys:client:SetOwner', src, plate)
 end
 
-local function spawnBoat(model, spawn)
-    local hash = model
-    local veh = CreateVehicle(hash, spawn.x, spawn.y, spawn.z, spawn.w, true, true)
-    local deadline = GetGameTimer() + 5000
-    while not DoesEntityExist(veh) and GetGameTimer() < deadline do
-        Wait(50)
-    end
-    if not DoesEntityExist(veh) then return nil end
-
-    SetEntityHeading(veh, spawn.w)
-    SetVehicleDoorsLocked(veh, Config.BoatRental.lockDoors and 2 or 1)
-    return veh
-end
-
 local function catalogFor(dock)
     local list = {}
     for i = 1, #dock.boats do
         local id = dock.boats[i]
         local boat = Config.BoatCatalog[id]
         if boat then
+            local times = {}
+            for t = 1, #Config.BoatDurations do
+                local duration = Config.BoatDurations[t]
+                local price = Config.BoatRentalCost(boat, duration)
+                times[t] = {
+                    id = duration.id,
+                    label = duration.label,
+                    minutes = duration.minutes,
+                    price = price,
+                    deposit = boat.deposit or 0,
+                    total = price + (boat.deposit or 0),
+                }
+            end
             list[#list + 1] = {
                 id = id,
                 label = boat.label,
                 description = boat.description,
-                price = boat.price,
                 deposit = boat.deposit,
+                times = times,
             }
         end
     end
@@ -111,16 +121,21 @@ lib.callback.register('djfivem-fishing:boatMenu', function(source, dockId)
             label = rental.label,
             remaining = remaining,
             deposit = rental.deposit,
+            durationLabel = rental.durationLabel,
         } or nil,
         cash = Bridge.GetMoney(source),
     }
 end)
 
-lib.callback.register('djfivem-fishing:rentBoat', function(source, dockId, boatId)
+lib.callback.register('djfivem-fishing:rentBoat', function(source, dockId, boatId, durationId)
     local dock = type(dockId) == 'string' and docksById[dockId]
     local boat = type(boatId) == 'string' and Config.BoatCatalog[boatId]
-    if not dock or not boat or not isNearDock(source, dock) then
+    local duration = Config.GetBoatDuration(durationId)
+    if not dock or not isNearDock(source, dock) then
         return { ok = false, error = 'notify_too_far' }
+    end
+    if not boat or not duration then
+        return { ok = false, error = 'notify_invalid' }
     end
 
     local allowed
@@ -134,49 +149,115 @@ lib.callback.register('djfivem-fishing:rentBoat', function(source, dockId, boatI
         return { ok = false, error = 'notify_invalid' }
     end
 
-    if rentals[source] then
+    if rentals[source] or pendingSpawns[source] then
         return { ok = false, error = 'notify_have_boat' }
     end
 
-    local total = (boat.price or 0) + (boat.deposit or 0)
+    local price, deposit = Config.BoatRentalCost(boat, duration)
+    local total = price + deposit
     if not Bridge.RemoveMoney(source, total) then
         return { ok = false, error = 'notify_no_money' }
     end
 
-    local veh = spawnBoat(boat.model, dock.spawn)
-    if not veh then
-        Bridge.AddMoney(source, total)
+    local plate = ('FISH%04d'):format(math.random(0, 9999))
+    local expires = os.time() + (duration.minutes * 60)
+
+    pendingSpawns[source] = {
+        boatId = boatId,
+        dock = dock.id,
+        model = boat.model,
+        spawnName = boat.spawn,
+        plate = plate,
+        label = boat.label,
+        price = price,
+        deposit = deposit,
+        total = total,
+        durationLabel = duration.label,
+        expires = expires,
+        created = os.time(),
+    }
+
+    return {
+        ok = true,
+        needSpawn = true,
+        label = boat.label,
+        price = price,
+        deposit = deposit,
+        duration = duration.minutes,
+        durationLabel = duration.label,
+        plate = plate,
+        model = boat.model,
+        spawnName = boat.spawn,
+        spawn = { x = dock.spawn.x, y = dock.spawn.y, z = dock.spawn.z, w = dock.spawn.w },
+        fuel = Config.BoatRental.fuel or 100.0,
+    }
+end)
+
+lib.callback.register('djfivem-fishing:confirmBoat', function(source, netId)
+    local pending = pendingSpawns[source]
+    if not pending then
         return { ok = false, error = 'notify_boat_fail' }
     end
 
-    local plate = ('FISH%04d'):format(math.random(0, 9999))
-    pcall(SetVehicleNumberPlateText, veh, plate)
-    local netId = NetworkGetNetworkIdFromEntity(veh)
-    local duration = Config.BoatRental.duration or 0
+    netId = tonumber(netId)
+    if not netId then
+        refundPending(source)
+        return { ok = false, error = 'notify_boat_fail' }
+    end
 
+    local entity
+    local deadline = GetGameTimer() + 4000
+    while GetGameTimer() < deadline do
+        entity = NetworkGetEntityFromNetworkId(netId)
+        if entity and entity ~= 0 and DoesEntityExist(entity) then
+            break
+        end
+        Wait(50)
+    end
+
+    if not entity or entity == 0 or not DoesEntityExist(entity) then
+        refundPending(source)
+        return { ok = false, error = 'notify_boat_fail' }
+    end
+
+    if GetEntityModel(entity) ~= pending.model then
+        refundPending(source)
+        return { ok = false, error = 'notify_boat_fail' }
+    end
+
+    pendingSpawns[source] = nil
     rentals[source] = {
-        entity = veh,
+        entity = entity,
         netId = netId,
-        plate = plate,
-        dock = dock.id,
-        label = boat.label,
-        deposit = boat.deposit or 0,
-        expires = duration > 0 and (os.time() + duration) or nil,
+        plate = pending.plate,
+        dock = pending.dock,
+        label = pending.label,
+        deposit = pending.deposit,
+        durationLabel = pending.durationLabel,
+        expires = pending.expires,
         warned = false,
+        missing = 0,
     }
 
-    giveKeys(source, veh, plate)
-    TriggerClientEvent('djfivem-fishing:client:boardBoat', source, netId, plate)
+    giveKeys(source, entity, pending.plate)
     Stats.RecordBoat(source)
 
     return {
         ok = true,
-        label = boat.label,
-        price = boat.price,
-        deposit = boat.deposit,
-        duration = duration,
+        label = pending.label,
+        price = pending.price,
+        deposit = pending.deposit,
+        durationLabel = pending.durationLabel,
         netId = netId,
     }
+end)
+
+lib.callback.register('djfivem-fishing:abortBoat', function(source)
+    if not pendingSpawns[source] then
+        return { ok = false }
+    end
+    refundPending(source)
+    return { ok = true }
 end)
 
 lib.callback.register('djfivem-fishing:returnBoat', function(source, dockId)
@@ -192,7 +273,8 @@ lib.callback.register('djfivem-fishing:returnBoat', function(source, dockId)
 
     if rental.entity and DoesEntityExist(rental.entity) then
         local coords = GetEntityCoords(rental.entity)
-        if #(coords - dock.spawnPos) > (Config.BoatRental.returnRadius + 20.0) and #(coords - dock.pos) > (Config.BoatRental.returnRadius + 20.0) then
+        local radius = (Config.BoatRental.returnRadius or 32.0) + 20.0
+        if #(coords - dock.spawnPos) > radius and #(coords - dock.pos) > radius then
             return { ok = false, error = 'notify_return_dock' }
         end
     end
@@ -206,31 +288,50 @@ CreateThread(function()
     while true do
         Wait(10000)
         local now = os.time()
-        local warnAt = Config.BoatRental.warnAt or 120
-        for src, rental in pairs(rentals) do
-            if rental.entity and not DoesEntityExist(rental.entity) then
-                rentals[src] = nil
+        local warnAt = Config.BoatRental.warnAt or 180
+        local spawnTimeout = Config.BoatRental.spawnTimeout or 20
+
+        for src, pending in pairs(pendingSpawns) do
+            if (now - (pending.created or now)) >= spawnTimeout then
+                refundPending(src)
                 TriggerClientEvent('ox_lib:notify', src, {
                     title = 'Boat Rental',
-                    description = locale('notify_boat_lost'),
+                    description = locale('notify_boat_fail'),
                     type = 'error',
                 })
-            elseif rental.expires then
-                local left = rental.expires - now
-                if left <= 0 then
-                    clearRental(src, true)
+            end
+        end
+
+        for src, rental in pairs(rentals) do
+            if rental.entity and not DoesEntityExist(rental.entity) then
+                rental.missing = (rental.missing or 0) + 1
+                if rental.missing >= 3 then
+                    rentals[src] = nil
                     TriggerClientEvent('ox_lib:notify', src, {
                         title = 'Boat Rental',
-                        description = locale('notify_boat_expired'),
-                        type = 'inform',
+                        description = locale('notify_boat_lost'),
+                        type = 'error',
                     })
-                elseif not rental.warned and left <= warnAt then
-                    rental.warned = true
-                    TriggerClientEvent('ox_lib:notify', src, {
-                        title = 'Boat Rental',
-                        description = locale('notify_boat_warn', left),
-                        type = 'inform',
-                    })
+                end
+            else
+                rental.missing = 0
+                if rental.expires then
+                    local left = rental.expires - now
+                    if left <= 0 then
+                        clearRental(src, true)
+                        TriggerClientEvent('ox_lib:notify', src, {
+                            title = 'Boat Rental',
+                            description = locale('notify_boat_expired'),
+                            type = 'inform',
+                        })
+                    elseif not rental.warned and left <= warnAt then
+                        rental.warned = true
+                        TriggerClientEvent('ox_lib:notify', src, {
+                            title = 'Boat Rental',
+                            description = locale('notify_boat_warn', math.ceil(left / 60)),
+                            type = 'inform',
+                        })
+                    end
                 end
             end
         end
@@ -243,6 +344,9 @@ end)
 
 AddEventHandler('onResourceStop', function(resource)
     if resource ~= GetCurrentResourceName() then return end
+    for src in pairs(pendingSpawns) do
+        refundPending(src)
+    end
     for src in pairs(rentals) do
         clearRental(src, true)
     end

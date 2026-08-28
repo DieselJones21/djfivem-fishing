@@ -5,7 +5,7 @@ lua54 'yes'
 name 'djfivem-fishing'
 author 'DieselJones21'
 description 'Ocean, lake, and river fishing with ox_lib skill checks, progress bars, ox_inventory, and a custom tackle shop UI'
-version '1.2.0'
+version '1.3.0'
 
 shared_scripts {
     '@ox_lib/init.lua',

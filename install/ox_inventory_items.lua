@@ -72,7 +72,7 @@ return {
         stack = true,
         close = false,
         consume = 0,
-        description = 'Mono spool. Each spool lasts 5 bites.',
+        description = 'Mono spool. Each spool lasts 20 bites.',
         client = { image = 'nui://djfivem-fishing/images/fishing_line.png' },
     },
     ['bait_ocean'] = {
