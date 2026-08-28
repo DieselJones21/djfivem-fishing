@@ -36,8 +36,8 @@ Config.BiteWait = { min = 4500, max = 11000 }
 Config.CastDuration = 2200
 Config.ReelDuration = { min = 3200, max = 6200 }
 
-Config.LineSnapChance = 0.18 -- extra chance to snap line after a failed fight
-Config.LegendarySnapChance = 0.35
+Config.LineSnapChance = 0.08 -- extra chance to snap line after a failed fight
+Config.LegendarySnapChance = 0.15
 
 Config.SkillKeys = { 'w', 'a', 's', 'd' }
 
@@ -63,7 +63,7 @@ Config.Equipment = {
         description = 'A shoreline rod that will get you started. Low luck for trophy fish.',
         category = 'rods',
         price = 175,
-        uses = 40,
+        uses = 200,
         rareBonus = 0,
         weight = 1200,
     },
@@ -72,7 +72,7 @@ Config.Equipment = {
         description = 'Lighter blank with better hook-sets. Improves rare catch rates.',
         category = 'rods',
         price = 520,
-        uses = 90,
+        uses = 450,
         rareBonus = 6,
         weight = 1100,
     },
@@ -81,7 +81,7 @@ Config.Equipment = {
         description = 'Heavy-action rod built for marlin and shark. Highest rare luck.',
         category = 'rods',
         price = 1450,
-        uses = 160,
+        uses = 750,
         rareBonus = 14,
         weight = 1400,
     },
@@ -90,7 +90,7 @@ Config.Equipment = {
         description = 'Reliable spinning reel. Keeps line tension, no extra assist.',
         category = 'reels',
         price = 125,
-        uses = 50,
+        uses = 250,
         weight = 450,
     },
     fishing_reel_pro = {
@@ -98,7 +98,7 @@ Config.Equipment = {
         description = 'Smoother drag. Makes skill checks a little more forgiving.',
         category = 'reels',
         price = 380,
-        uses = 100,
+        uses = 500,
         weight = 500,
     },
     fishing_reel_elite = {
@@ -106,15 +106,15 @@ Config.Equipment = {
         description = 'Saltwater drag system. Biggest skill-check window in the kit.',
         category = 'reels',
         price = 980,
-        uses = 180,
+        uses = 850,
         weight = 560,
     },
     fishing_line = {
         label = 'Fishing Line',
-        description = 'Mono spool. Each spool lasts 5 bites before you need another.',
+        description = 'Mono spool. Each spool lasts 20 bites before you need another.',
         category = 'line',
         price = 4,
-        uses = 5,
+        uses = 20,
         weight = 20,
     },
     bait_ocean = {
@@ -371,8 +371,10 @@ for i = 1, #Config.Zones do
     zone.radiusSq = zone.radius * zone.radius
 end
 
--- Named map blips for every fishing zone. Radius overlays are off by default (they are expensive).
-Config.ShowZoneBlips = true
+-- Shoreline spots stay fishable but do not spam the pause map.
+-- Offshore marks stay on so boaters can waypoint them.
+Config.ShowZoneBlips = false
+Config.ShowOffshoreBlips = true
 Config.ShowZoneRadius = false
 Config.ZoneBlip = {
     sprite = 68,
@@ -381,7 +383,7 @@ Config.ZoneBlip = {
     ocean = { color = 3, label = 'Ocean Fishing' },
     lake = { color = 2, label = 'Lake Fishing' },
     river = { color = 5, label = 'River Fishing' },
-    offshore = { sprite = 68, color = 1, scale = 0.85, shortRange = false, label = 'Offshore Fishing' },
+    offshore = { sprite = 68, color = 1, scale = 0.8, shortRange = true, label = 'Offshore Fishing' },
 }
 
 -- Rare/legendary fish are more likely once you leave the shoreline.
@@ -419,10 +421,9 @@ Config.Shops = {
         label = 'Del Perro Tackle',
         subtitle = 'Ocean outfitter',
         ped = `s_m_m_dockwork_01`,
-        coords = vec4(-1852.42, -1239.18, 13.02, 319.0),
+        coords = vec4(-1845.09, -1195.53, 19.18, 166.30),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
         blip = { sprite = 68, color = 1, scale = 0.85, label = 'Fishing Shop' },
-        views = { 'shop', 'sell' },
         defaultView = 'shop',
     },
     {
@@ -433,7 +434,6 @@ Config.Shops = {
         coords = vec4(-3426.55, 982.16, 8.43, 96.0),
         scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
         blip = { sprite = 68, color = 1, scale = 0.85, label = 'Fishing Shop' },
-        views = { 'shop', 'sell' },
         defaultView = 'shop',
     },
     {
@@ -444,7 +444,6 @@ Config.Shops = {
         coords = vec4(1301.09, 4319.37, 38.18, 311.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
         blip = { sprite = 68, color = 1, scale = 0.85, label = 'Fishing Shop' },
-        views = { 'shop', 'sell' },
         defaultView = 'shop',
     },
     {
@@ -455,7 +454,6 @@ Config.Shops = {
         coords = vec4(-811.42, 4394.18, 16.96, 192.0),
         scenario = 'WORLD_HUMAN_SMOKING',
         blip = { sprite = 68, color = 1, scale = 0.85, label = 'Fishing Shop' },
-        views = { 'shop', 'sell' },
         defaultView = 'shop',
     },
     {
@@ -466,7 +464,6 @@ Config.Shops = {
         coords = vec4(-1038.64, -1397.12, 5.55, 75.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
         blip = { sprite = 356, color = 1, scale = 0.8, label = 'Fish Buyer' },
-        views = { 'shop', 'sell' },
         defaultView = 'sell',
     },
 }
@@ -548,21 +545,56 @@ Config.DailyTasks = {
 }
 
 ----------------------------------------------------------------
--- Boat rentals
+-- Boat rentals (real-world clock, not in-game time)
 ----------------------------------------------------------------
 Config.BoatRental = {
-    duration = 1200, -- seconds; 0 = until returned
-    warnAt = 120,
+    warnAt = 180, -- seconds before expiry to ping the renter
     returnRadius = 32.0,
     lockDoors = false,
+    fuel = 100.0,
+    spawnTimeout = 20,
 }
 
-Config.BoatCatalog = {
-    dinghy = { model = `dinghy`, label = 'Dinghy', description = 'Small work skiff. Fine for lakes and inshore.', price = 200, deposit = 100 },
-    seashark = { model = `seashark`, label = 'Seashark', description = 'Jet ski. Fast hop to nearby marks.', price = 150, deposit = 75 },
-    suntrap = { model = `suntrap`, label = 'Suntrap', description = 'Open bow runabout for coastal runs.', price = 350, deposit = 150 },
-    speeder = { model = `speeder`, label = 'Speeder', description = 'Fast offshore boat for the deep marks.', price = 650, deposit = 250 },
+-- IRL minutes. Price is boat.price * multiplier. Deposit is always refunded on a clean return.
+Config.BoatDurations = {
+    { id = '15m', label = '15 minutes', minutes = 15, multiplier = 1.0 },
+    { id = '30m', label = '30 minutes', minutes = 30, multiplier = 1.8 },
+    { id = '1h', label = '1 hour', minutes = 60, multiplier = 3.0 },
+    { id = '2h', label = '2 hours', minutes = 120, multiplier = 5.0 },
 }
+
+-- Addon spawn names: freeman, gradywhite, 26ftyellowfin
+Config.BoatCatalog = {
+    freeman = {
+        model = joaat('freeman'),
+        spawn = 'freeman',
+        label = 'Freeman',
+        description = 'Center-console fishing boat. Good all-rounder.',
+        price = 350,
+        deposit = 200,
+    },
+    gradywhite = {
+        model = joaat('gradywhite'),
+        spawn = 'gradywhite',
+        label = 'Grady White',
+        description = 'Coastal walker. Stable for longer trips.',
+        price = 450,
+        deposit = 250,
+    },
+    yellowfin = {
+        model = joaat('26ftyellowfin'),
+        spawn = '26ftyellowfin',
+        label = '26ft Yellowfin',
+        description = 'Offshore center console. Built for the deep marks.',
+        price = 600,
+        deposit = 300,
+    },
+}
+
+Config.BoatHashLookup = {}
+for id, boat in pairs(Config.BoatCatalog) do
+    Config.BoatHashLookup[boat.model] = id
+end
 
 Config.BoatDocks = {
     {
@@ -571,9 +603,9 @@ Config.BoatDocks = {
         subtitle = 'Puerto Del Sol marina',
         ped = `s_m_y_baywatch_01`,
         coords = vec4(-806.42, -1496.64, 1.60, 110.0),
-        spawn = vec4(-842.20, -1512.40, 0.15, 110.0),
+        spawn = vec4(-858.00, -1528.00, 0.20, 110.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
-        boats = { 'dinghy', 'seashark', 'suntrap', 'speeder' },
+        boats = { 'freeman', 'gradywhite', 'yellowfin' },
         blip = { sprite = 410, color = 3, scale = 0.8, label = 'Boat Rental' },
     },
     {
@@ -582,9 +614,9 @@ Config.BoatDocks = {
         subtitle = 'Pier launch',
         ped = `a_m_y_beach_01`,
         coords = vec4(-3428.10, 995.20, 8.30, 90.0),
-        spawn = vec4(-3462.00, 968.40, 0.40, 90.0),
+        spawn = vec4(-3485.00, 968.40, 0.40, 90.0),
         scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
-        boats = { 'dinghy', 'suntrap', 'speeder' },
+        boats = { 'freeman', 'gradywhite', 'yellowfin' },
         blip = { sprite = 410, color = 3, scale = 0.8, label = 'Boat Rental' },
     },
     {
@@ -593,9 +625,9 @@ Config.BoatDocks = {
         subtitle = 'Bay launch',
         ped = `a_m_m_farmer_01`,
         coords = vec4(-247.80, 6548.40, 11.10, 140.0),
-        spawn = vec4(-285.00, 6628.00, 0.40, 40.0),
+        spawn = vec4(-320.00, 6665.00, 0.40, 40.0),
         scenario = 'WORLD_HUMAN_SMOKING',
-        boats = { 'dinghy', 'seashark', 'suntrap' },
+        boats = { 'freeman', 'gradywhite', 'yellowfin' },
         blip = { sprite = 410, color = 3, scale = 0.8, label = 'Boat Rental' },
     },
     {
@@ -604,9 +636,23 @@ Config.BoatDocks = {
         subtitle = 'Lakeside launch',
         ped = `a_m_m_hillbilly_02`,
         coords = vec4(1540.55, 3907.20, 31.70, 200.0),
-        spawn = vec4(1558.00, 3900.00, 30.40, 170.0),
+        spawn = vec4(1595.00, 3865.00, 30.40, 170.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
-        boats = { 'dinghy', 'seashark' },
+        boats = { 'freeman', 'gradywhite', 'yellowfin' },
         blip = { sprite = 410, color = 2, scale = 0.8, label = 'Boat Rental' },
     },
 }
+
+function Config.GetBoatDuration(id)
+    for i = 1, #Config.BoatDurations do
+        if Config.BoatDurations[i].id == id then
+            return Config.BoatDurations[i]
+        end
+    end
+end
+
+function Config.BoatRentalCost(boat, duration)
+    local price = math.floor((boat.price * (duration.multiplier or 1.0)) + 0.5)
+    return price, boat.deposit or 0
+end
+

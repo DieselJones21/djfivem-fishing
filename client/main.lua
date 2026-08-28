@@ -77,7 +77,7 @@ local function openShop(shop, view)
             id = shop.id,
             label = shop.label,
             subtitle = shop.subtitle,
-            views = shop.views or Config.ShopViews or { 'shop', 'sell' },
+            views = Config.ShopViews or shop.views or { 'shop', 'sell' },
         },
         player = payload.player,
         catalog = catalogFromConfig(),
@@ -209,7 +209,7 @@ local function createZoneBlip(zone)
     end
     SetBlipAsShortRange(blip, shortRange)
     BeginTextCommandSetBlipName('STRING')
-    AddTextComponentString(('%s · %s'):format(style.label or 'Fishing', zone.name))
+    AddTextComponentString(style.label or 'Fishing')
     EndTextCommandSetBlipName(blip)
     spawnedBlips[#spawnedBlips + 1] = blip
 
@@ -225,9 +225,12 @@ local function setupZones()
     local zones = Config.Zones
     local zoneCount = #zones
 
-    if Config.ShowZoneBlips then
+    if Config.ShowZoneBlips or Config.ShowOffshoreBlips then
         for i = 1, zoneCount do
-            createZoneBlip(zones[i])
+            local zone = zones[i]
+            if Config.ShowZoneBlips or zone.offshore then
+                createZoneBlip(zone)
+            end
         end
     end
 

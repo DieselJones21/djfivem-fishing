@@ -108,7 +108,7 @@ local function starterMetadata(item)
 end
 
 local function lineUsesFromSlot(slot)
-    local maxUses = Config.Equipment.fishing_line and Config.Equipment.fishing_line.uses or 5
+    local maxUses = Config.Equipment.fishing_line and Config.Equipment.fishing_line.uses or 20
     local uses = slot.metadata and slot.metadata.uses
     if type(uses) == 'number' then
         return uses, maxUses

@@ -8,7 +8,11 @@ local function isDead()
 end
 
 local function inBoat()
-    return Config.AllowBoatFishing ~= false and cache.vehicle and GetVehicleClass(cache.vehicle) == 14
+    if Config.AllowBoatFishing == false then return false end
+    local veh = cache.vehicle
+    if not veh then return false end
+    if GetVehicleClass(veh) == 14 then return true end
+    return Config.BoatHashLookup and Config.BoatHashLookup[GetEntityModel(veh)] ~= nil
 end
 
 local function blockedVehicle()
@@ -35,8 +39,10 @@ end
 
 local function facingWater()
     if not Config.RequireFacingWater then return true end
-    if Config.AllowBoatFishing ~= false and cache.vehicle and GetVehicleClass(cache.vehicle) == 14 then
-        return true
+    if Config.AllowBoatFishing ~= false and cache.vehicle then
+        if GetVehicleClass(cache.vehicle) == 14 or (Config.BoatHashLookup and Config.BoatHashLookup[GetEntityModel(cache.vehicle)]) then
+            return true
+        end
     end
 
     local ped = cache.ped
