@@ -31,6 +31,7 @@ files {
     'html/index.html',
     'html/style.css',
     'html/app.js',
+    'html/brand/*.png',
     'locales/*.json',
     'images/*.png',
 }
