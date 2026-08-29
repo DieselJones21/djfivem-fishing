@@ -21,6 +21,13 @@ const ICONS = {
   fish: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12s5-6 11-6c5 0 7 6 7 6s-2 6-7 6c-6 0-11-6-11-6z"/><path d="M3 12l4 4M3 12l4-4"/><circle cx="16" cy="12" r="1"/></svg>',
 };
 
+const BRAND_LOGO = '<img class="empty-logo" src="brand/logo.png" alt="DJ FIVEM SCRIPTS" />';
+
+function emptyState(title, copy, extraClass) {
+  const cls = extraClass ? ` empty-${extraClass}` : '';
+  return `<div class="empty${cls}">${BRAND_LOGO}<strong>${title}</strong><p>${copy}</p></div>`;
+}
+
 function itemImage(name) {
   if (inFiveM) return `nui://${resourceName}/images/${name}.png`;
   return `../images/${name}.png`;
@@ -344,7 +351,7 @@ function matchesQuery(item) {
 function renderShop() {
   const items = state.catalog.filter((item) => (state.tab === 'all' || item.category === state.tab) && matchesQuery(item));
   if (!items.length) {
-    content.innerHTML = `<div class="empty"><strong>No gear matches</strong><p>Try another tab or search.</p></div>`;
+    content.innerHTML = emptyState('No gear matches', 'Try another tab or search.');
     return;
   }
 
@@ -381,7 +388,7 @@ function renderShop() {
 function renderSell() {
   const items = state.fish.filter((item) => (state.tab === 'all' || item.zone === state.tab) && matchesQuery(item));
   if (!items.length) {
-    content.innerHTML = `<div class="empty"><div class="icon">${ICONS.fish}</div><strong>No fish in your pack</strong><p>Hit the ocean, lakes, or rivers, then sell here.</p></div>`;
+    content.innerHTML = emptyState('No fish in your pack', 'Hit the ocean, lakes, or rivers, then sell here.');
     return;
   }
 
@@ -418,7 +425,7 @@ function renderSell() {
 function renderTasks() {
   const items = state.tasks.filter((item) => matchesQuery(item));
   if (!items.length) {
-    content.innerHTML = `<div class="empty"><strong>No daily tasks</strong><p>Come back after the next reset.</p></div>`;
+    content.innerHTML = emptyState('No daily tasks', 'Come back after the next reset.');
     return;
   }
 
@@ -457,7 +464,7 @@ function renderBoard() {
   const fishMoney = (block) => {
     const rows = (block && block.rows) || [];
     if (!rows.length) {
-      return `<div class="empty" style="min-height:160px"><strong>No scores yet</strong><p>Catch or sell fish to appear here.</p></div>`;
+      return emptyState('No scores yet', 'Catch or sell fish to appear here.', 'compact');
     }
     const you = block.you || {};
     const isMoney = block === cash;
