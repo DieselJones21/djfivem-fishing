@@ -9,7 +9,7 @@ return {
         stack = false,
         close = true,
         consume = 0,
-        description = 'A Vice City canal stick. Gets you started on the seawall.',
+        description = 'A Los Santos canal stick. Gets you started on the seawall.',
         client = {
             export = 'djfivem-fishing.useRod',
             image = 'nui://djfivem-fishing/images/fishing_rod_basic.png',
@@ -40,12 +40,12 @@ return {
         },
     },
     ['fishing_rod_miami'] = {
-        label = 'Neon 305 Rod',
+        label = 'Envy Night Rod',
         weight = 1350,
         stack = false,
         close = true,
         consume = 0,
-        description = 'Signature 305 blank. Built for silver kings after dark.',
+        description = 'Signature Envy blank. Built for silver kings after dark.',
         client = {
             export = 'djfivem-fishing.useRod',
             image = 'nui://djfivem-fishing/images/fishing_rod_miami.png',
@@ -88,12 +88,12 @@ return {
         client = { image = 'nui://djfivem-fishing/images/fishing_line.png' },
     },
     ['fishing_line_braid'] = {
-        label = '305 Braid',
+        label = 'Envy Braid',
         weight = 18,
         stack = true,
         close = false,
         consume = 0,
-        description = 'Pink braid for the night bite. 40 bites a spool.',
+        description = 'Cyan braid for the night bite. 40 bites a spool.',
         client = { image = 'nui://djfivem-fishing/images/fishing_line_braid.png' },
     },
     ['bait_ocean'] = {
@@ -109,7 +109,7 @@ return {
         weight = 28,
         stack = true,
         close = false,
-        description = 'Premium 305 bait. Used first on the ocean if you have it.',
+        description = 'Premium Envy bait. Used first on the ocean if you have it.',
         client = { image = 'nui://djfivem-fishing/images/bait_shrimp.png' },
     },
     ['bait_lake'] = {
@@ -214,7 +214,7 @@ return {
         weight = 1700,
         stack = true,
         close = false,
-        description = 'Ocean catch. The 305 trophy.',
+        description = 'Ocean catch. The Envy trophy.',
         client = { image = 'nui://djfivem-fishing/images/fish_tarpon.png' },
     },
 

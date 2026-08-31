@@ -60,7 +60,7 @@ Config.Difficulty = {
 Config.Equipment = {
     fishing_rod_basic = {
         label = 'Canal Rod',
-        description = 'A Vice City canal stick. Gets you started on the seawall.',
+        description = 'A Los Santos canal stick. Gets you started on the seawall.',
         category = 'rods',
         price = 175,
         uses = 200,
@@ -86,8 +86,8 @@ Config.Equipment = {
         weight = 1400,
     },
     fishing_rod_miami = {
-        label = 'Neon 305 Rod',
-        description = 'Signature 305 blank. Built for silver kings after dark.',
+        label = 'Envy Night Rod',
+        description = 'Signature Envy blank. Built for silver kings after dark.',
         category = 'rods',
         price = 2200,
         uses = 900,
@@ -127,8 +127,8 @@ Config.Equipment = {
         weight = 20,
     },
     fishing_line_braid = {
-        label = '305 Braid',
-        description = 'Pink braid for the night bite. 40 bites a spool.',
+        label = 'Envy Braid',
+        description = 'Cyan braid for the night bite. 40 bites a spool.',
         category = 'line',
         price = 12,
         uses = 40,
@@ -143,7 +143,7 @@ Config.Equipment = {
     },
     bait_shrimp = {
         label = 'Live Shrimp',
-        description = 'Premium 305 bait. Used first on the ocean if you have it.',
+        description = 'Premium Envy bait. Used first on the ocean if you have it.',
         category = 'bait',
         price = 14,
         weight = 28,
@@ -257,7 +257,7 @@ Config.Fish = {
         difficulty = 'medium',
         checks = 2,
         rarity = 'uncommon',
-        description = 'Linesider under the lights. A 305 classic.',
+        description = 'Linesider under the lights. An Envy classic.',
     },
     fish_permit = {
         label = 'Permit',
@@ -297,7 +297,7 @@ Config.Fish = {
         difficulty = 'hard',
         checks = 3,
         rarity = 'legendary',
-        description = 'The 305 trophy. Bring the Neon rod.',
+        description = 'The Envy trophy. Bring the Night rod.',
     },
 
     -- Lakes
@@ -531,12 +531,12 @@ Config.ZoneCheck.nearbySq = Config.ZoneCheck.nearbyRadius * Config.ZoneCheck.nea
 Config.Shops = {
     {
         id = 'delperro',
-        label = '305 Pier Outfitters',
-        subtitle = 'Vice City tackle',
+        label = 'Envy Pier Outfitters',
+        subtitle = 'Los Santos tackle',
         ped = `s_m_m_dockwork_01`,
         coords = vec4(-1845.09, -1195.53, 19.18, 166.30),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
-        blip = { sprite = 68, color = 8, scale = 0.85, label = '305 Tackle' },
+        blip = { sprite = 68, color = 3, scale = 0.85, label = 'Envy Tackle' },
         defaultView = 'shop',
     },
     {
@@ -546,17 +546,17 @@ Config.Shops = {
         ped = `a_m_m_beach_01`,
         coords = vec4(-3426.55, 982.16, 8.43, 96.0),
         scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
-        blip = { sprite = 68, color = 8, scale = 0.85, label = '305 Tackle' },
+        blip = { sprite = 68, color = 3, scale = 0.85, label = 'Envy Tackle' },
         defaultView = 'shop',
     },
     {
         id = 'alamo',
-        label = 'Inland 305 Tackle',
+        label = 'Inland Envy Tackle',
         subtitle = 'Canal shop',
         ped = `a_m_m_hillbilly_01`,
         coords = vec4(1301.09, 4319.37, 38.18, 311.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
-        blip = { sprite = 68, color = 8, scale = 0.85, label = '305 Tackle' },
+        blip = { sprite = 68, color = 3, scale = 0.85, label = 'Envy Tackle' },
         defaultView = 'shop',
     },
     {
@@ -566,17 +566,17 @@ Config.Shops = {
         ped = `a_m_m_farmer_01`,
         coords = vec4(-811.42, 4394.18, 16.96, 192.0),
         scenario = 'WORLD_HUMAN_SMOKING',
-        blip = { sprite = 68, color = 8, scale = 0.85, label = '305 Tackle' },
+        blip = { sprite = 68, color = 3, scale = 0.85, label = 'Envy Tackle' },
         defaultView = 'shop',
     },
     {
         id = 'docks',
-        label = 'Vice Wholesale Market',
+        label = 'Envy Wholesale Market',
         subtitle = 'Cash for catch',
         ped = `s_m_m_linecook_01`,
         coords = vec4(-1038.64, -1397.12, 5.55, 75.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
-        blip = { sprite = 356, color = 8, scale = 0.8, label = '305 Fish Buyer' },
+        blip = { sprite = 356, color = 3, scale = 0.8, label = 'Envy Fish Buyer' },
         defaultView = 'sell',
     },
 }
@@ -641,7 +641,7 @@ Config.DailyTasks = {
     },
     {
         id = 'sell_cash',
-        label = 'Vice payout',
+        label = 'Harbor payout',
         description = 'Sell $400 worth of fish today.',
         type = 'sell',
         count = 400,
@@ -649,7 +649,7 @@ Config.DailyTasks = {
     },
     {
         id = 'rent_boat',
-        label = 'Launch the 305',
+        label = 'Launch Envy waters',
         description = 'Rent a boat from any marina.',
         type = 'boat',
         count = 1,
@@ -712,14 +712,14 @@ end
 Config.BoatDocks = {
     {
         id = 'vespucci',
-        label = '305 Marina',
+        label = 'Envy Marina',
         subtitle = 'Puerto Del Sol',
         ped = `s_m_y_baywatch_01`,
         coords = vec4(-806.42, -1496.64, 1.60, 110.0),
         spawn = vec4(-858.00, -1528.00, 0.20, 110.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
         boats = { 'freeman', 'gradywhite', 'yellowfin' },
-        blip = { sprite = 410, color = 8, scale = 0.8, label = '305 Marina' },
+        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Envy Marina' },
     },
     {
         id = 'chumash',
@@ -730,7 +730,7 @@ Config.BoatDocks = {
         spawn = vec4(-3485.00, 968.40, 0.40, 90.0),
         scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
         boats = { 'freeman', 'gradywhite', 'yellowfin' },
-        blip = { sprite = 410, color = 8, scale = 0.8, label = '305 Marina' },
+        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Envy Marina' },
     },
     {
         id = 'paleto',
@@ -741,18 +741,18 @@ Config.BoatDocks = {
         spawn = vec4(-320.00, 6665.00, 0.40, 40.0),
         scenario = 'WORLD_HUMAN_SMOKING',
         boats = { 'freeman', 'gradywhite', 'yellowfin' },
-        blip = { sprite = 410, color = 8, scale = 0.8, label = '305 Marina' },
+        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Envy Marina' },
     },
     {
         id = 'alamo',
-        label = 'Inland 305 Dock',
+        label = 'Inland Envy Dock',
         subtitle = 'Canal launch',
         ped = `a_m_m_hillbilly_02`,
         coords = vec4(1540.55, 3907.20, 31.70, 200.0),
         spawn = vec4(1595.00, 3865.00, 30.40, 170.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
         boats = { 'freeman', 'gradywhite', 'yellowfin' },
-        blip = { sprite = 410, color = 8, scale = 0.8, label = '305 Marina' },
+        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Envy Marina' },
     },
 }
 

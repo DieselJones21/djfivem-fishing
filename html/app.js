@@ -26,20 +26,29 @@ const ICONS = {
   fish: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12s5-6 11-6c5 0 7 6 7 6s-2 6-7 6c-6 0-11-6-11-6z"/><path d="M3 12l4 4M3 12l4-4"/><circle cx="16" cy="12" r="1"/></svg>',
 };
 
-const BRAND_LOGO = '<img class="empty-logo" src="brand/the305.png" alt="The 305" />';
+const BRAND_LOGO = '<img class="empty-logo" src="brand/envy.png" alt="Envy Roleplay" decoding="async" draggable="false" />';
 
 function emptyState(title, copy, extraClass) {
-  const cls = extraClass ? ` empty-${extraClass}` : '';
-  return `<div class="empty${cls}">${BRAND_LOGO}<strong>${title}</strong><p>${copy}</p></div>`;
+  const cls = extraClass === 'compact' ? ' empty-compact' : '';
+  return `<div class="empty${cls}">${BRAND_LOGO}<strong>${escapeHtml(title)}</strong><p>${escapeHtml(copy)}</p></div>`;
+}
+
+function safeItemId(name) {
+  return String(name || '').replace(/[^a-zA-Z0-9_-]/g, '');
 }
 
 function itemImage(name) {
-  if (inFiveM) return `nui://${resourceName}/images/${name}.png`;
-  return `../images/${name}.png`;
+  const id = safeItemId(name);
+  if (!id) return '';
+  if (inFiveM) return `nui://${resourceName}/images/${id}.png`;
+  return `../images/${id}.png`;
 }
 
 function iconFor(item) {
-  return `<img src="${itemImage(item.item)}" alt="${item.label || item.item}" />`;
+  const src = itemImage(item.item);
+  const alt = escapeHtml(item.label || item.item);
+  if (!src) return ICONS.fish;
+  return `<img src="${src}" alt="${alt}" decoding="async" draggable="false" />`;
 }
 
 const CATEGORIES = [
@@ -78,17 +87,17 @@ const DEMO = {
   ok: true,
   player: { name: 'MoodyNewt8638', cash: 12450 },
   catalog: [
-    { item: 'fishing_rod_basic', label: 'Canal Rod', description: 'A Vice City canal stick. Gets you started on the seawall.', category: 'rods', price: 175, uses: 200 },
+    { item: 'fishing_rod_basic', label: 'Canal Rod', description: 'A Los Santos canal stick. Gets you started on the seawall.', category: 'rods', price: 175, uses: 200 },
     { item: 'fishing_rod_pro', label: 'Biscayne Rod', description: 'Carbon blank for the bay. Better luck on snook and mahi.', category: 'rods', price: 520, uses: 450 },
     { item: 'fishing_rod_elite', label: 'Gulf Stream Rod', description: 'Heavy-action rod for tarpon and shark. Highest rare luck.', category: 'rods', price: 1450, uses: 750 },
-    { item: 'fishing_rod_miami', label: 'Neon 305 Rod', description: 'Signature 305 blank. Built for silver kings after dark.', category: 'rods', price: 2200, uses: 900 },
+    { item: 'fishing_rod_miami', label: 'Envy Night Rod', description: 'Signature Envy blank. Built for silver kings after dark.', category: 'rods', price: 2200, uses: 900 },
     { item: 'fishing_reel_basic', label: 'South Beach Spin', description: 'Reliable spinning reel. Keeps line tension, no extra assist.', category: 'reels', price: 125, uses: 250 },
     { item: 'fishing_reel_pro', label: 'Calle Ocho Caster', description: 'Smoother drag. Makes skill checks a little more forgiving.', category: 'reels', price: 380, uses: 500 },
     { item: 'fishing_reel_elite', label: 'Midnight Reel', description: 'Saltwater drag system. Biggest skill-check window in the kit.', category: 'reels', price: 980, uses: 850 },
     { item: 'fishing_line', label: 'Fluoro Line', description: 'Clear fluoro. Each spool lasts 20 bites.', category: 'line', price: 4, uses: 20 },
-    { item: 'fishing_line_braid', label: '305 Braid', description: 'Pink braid for the night bite. 40 bites a spool.', category: 'line', price: 12, uses: 40 },
+    { item: 'fishing_line_braid', label: 'Envy Braid', description: 'Cyan braid for the night bite. 40 bites a spool.', category: 'line', price: 12, uses: 40 },
     { item: 'bait_ocean', label: 'Cut Bait', description: 'Oily chunks. Works the ocean and Biscayne.', category: 'bait', price: 8 },
-    { item: 'bait_shrimp', label: 'Live Shrimp', description: 'Premium 305 bait. Preferred on the ocean if you have it.', category: 'bait', price: 14 },
+    { item: 'bait_shrimp', label: 'Live Shrimp', description: 'Premium Envy bait. Preferred on the ocean if you have it.', category: 'bait', price: 14 },
     { item: 'bait_lake', label: 'Panfish Bait', description: 'Live worms and jigs. Required on lakes and canals.', category: 'bait', price: 5 },
     { item: 'bait_river', label: 'Creek Bait', description: 'Roe and spinner bait. Required on creeks.', category: 'bait', price: 6 },
   ],
@@ -114,8 +123,8 @@ const DEMO = {
     { id: 'catch_ocean', label: 'Biscayne run', description: 'Catch 5 ocean fish.', count: 5, progress: 5, claimed: false, reward: 200, rewardItems: [] },
     { id: 'catch_offshore', label: 'Gulf Stream', description: 'Catch 3 fish at an offshore hotspot.', count: 3, progress: 1, claimed: false, reward: 275, rewardItems: [] },
     { id: 'catch_trophy', label: 'Silver King', description: 'Land a rare or legendary fish.', count: 1, progress: 0, claimed: false, reward: 400, rewardItems: [{ item: 'bait_shrimp', count: 5, label: 'Live Shrimp' }] },
-    { id: 'sell_cash', label: 'Vice payout', description: 'Sell $400 worth of fish today.', count: 400, progress: 210, claimed: false, reward: 125, rewardItems: [] },
-    { id: 'rent_boat', label: 'Launch the 305', description: 'Rent a boat from any marina.', count: 1, progress: 1, claimed: true, reward: 75, rewardItems: [] },
+    { id: 'sell_cash', label: 'Harbor payout', description: 'Sell $400 worth of fish today.', count: 400, progress: 210, claimed: false, reward: 125, rewardItems: [] },
+    { id: 'rent_boat', label: 'Launch Envy waters', description: 'Rent a boat from any marina.', count: 1, progress: 1, claimed: true, reward: 75, rewardItems: [] },
   ],
   board: {
     dailyFish: { rows: [{ rank: 1, name: 'MoodyNewt8638', value: 18, me: true }, { rank: 2, name: 'Kai', value: 14 }, { rank: 3, name: 'Reese', value: 9 }], you: { rank: 1, value: 18 } },
@@ -130,7 +139,7 @@ const DEMO = {
 const BOAT_DEMO = {
   ok: true,
   player: { name: 'MoodyNewt8638', cash: 12450 },
-  dock: { id: 'vespucci', label: '305 Marina', subtitle: 'Puerto Del Sol' },
+  dock: { id: 'vespucci', label: 'Envy Marina', subtitle: 'Puerto Del Sol' },
   boats: [
     {
       id: 'freeman',
@@ -146,7 +155,7 @@ const BOAT_DEMO = {
     {
       id: 'gradywhite',
       label: 'Grady White',
-      description: 'Coastal walker. Stable for longer trips along the 305.',
+      description: 'Coastal walker. Stable for longer trips along the coast.',
       times: [
         { id: '15m', label: '15 minutes', minutes: 15, price: 450, deposit: 250, total: 700 },
         { id: '30m', label: '30 minutes', minutes: 30, price: 810, deposit: 250, total: 1060 },
@@ -169,13 +178,17 @@ const BOAT_DEMO = {
   rented: null,
 };
 
+const SHOP_VIEWS = new Set(['shop', 'sell', 'tasks', 'board']);
+const BOAT_VIEWS = new Set(['fleet', 'active']);
+const NUI_ACTIONS = new Set(['close', 'buy', 'sell', 'sellAll', 'claimTask', 'rentBoat', 'returnBoat', 'refresh']);
+
 const state = {
   mode: 'shop',
   view: 'shop',
   tab: 'all',
   query: '',
   qty: {},
-  shop: { label: '305 Pier Outfitters', subtitle: 'Vice City tackle', views: ['shop', 'sell', 'tasks', 'board'] },
+  shop: { label: 'Envy Pier Outfitters', subtitle: 'Los Santos tackle', views: ['shop', 'sell', 'tasks', 'board'] },
   player: { name: 'Angler', cash: 0 },
   catalog: [],
   fish: [],
@@ -200,7 +213,7 @@ function escapeHtml(value) {
 }
 
 function initials(name) {
-  return (name || '305').split(/\s+/).map((p) => p[0]).join('').slice(0, 3).toUpperCase();
+  return (name || 'ENV').split(/\s+/).filter(Boolean).map((p) => p[0]).join('').slice(0, 3).toUpperCase() || 'ENV';
 }
 
 function toast(message) {
@@ -212,6 +225,7 @@ function toast(message) {
 }
 
 async function nui(name, payload = {}) {
+  if (!NUI_ACTIONS.has(name)) return { ok: false };
   if (!inFiveM) return mockNui(name, payload);
   const res = await fetch(`https://${resourceName}/${name}`, {
     method: 'POST',
@@ -225,7 +239,8 @@ function mockNui(name, payload) {
   if (name === 'close') return { ok: true };
   if (name === 'buy') {
     const item = state.catalog.find((i) => i.item === payload.item);
-    const amount = payload.amount || 1;
+    const amount = Math.max(1, Math.min(50, payload.amount || 1));
+    if (!item) return { ok: false };
     const total = item.price * amount;
     if (state.player.cash < total) return { ok: false, error: 'notify_no_money' };
     state.player.cash -= total;
@@ -234,6 +249,7 @@ function mockNui(name, payload) {
   }
   if (name === 'sell') {
     const fish = state.fish.find((i) => i.item === payload.item);
+    if (!fish) return { ok: false };
     const amount = Math.min(payload.amount || 1, fish.count);
     fish.count -= amount;
     const total = fish.price * amount;
@@ -339,6 +355,8 @@ function applyPayload(payload) {
 }
 
 function setView(view) {
+  const allowed = state.mode === 'boats' ? BOAT_VIEWS : SHOP_VIEWS;
+  if (!allowed.has(view)) return;
   state.view = view;
   state.tab = view === 'board' ? 'today' : 'all';
   state.query = '';
@@ -653,10 +671,10 @@ function renderActive() {
 
 function render() {
   titleEl.textContent = state.mode === 'boats'
-    ? (state.shop.label || '305 Marina')
-    : (state.shop.label || '305 Fishing');
-  subtitleEl.textContent = state.shop.subtitle || (state.mode === 'boats' ? 'Boat rental' : 'Vice City tackle');
-  playerRoleEl.textContent = state.mode === 'boats' ? 'Marina guest' : 'Licensed 305 angler';
+    ? (state.shop.label || 'Envy Marina')
+    : (state.shop.label || 'Envy Fishing');
+  subtitleEl.textContent = state.shop.subtitle || (state.mode === 'boats' ? 'Boat rental' : 'Los Santos tackle');
+  playerRoleEl.textContent = state.mode === 'boats' ? 'Marina guest' : 'Licensed Envy angler';
   content.classList.toggle('tasks-view', state.view === 'tasks');
   content.classList.toggle('board-view', state.view === 'board');
   content.classList.toggle('boats-view', state.mode === 'boats' && state.view === 'fleet');
@@ -679,7 +697,9 @@ function openUI(payload) {
   state.mode = payload.mode === 'boats' ? 'boats' : 'shop';
   if (payload.shop) state.shop = payload.shop;
   if (payload.dock) state.shop = { ...state.shop, ...payload.dock };
-  state.view = payload.view || (state.mode === 'boats' ? 'fleet' : 'shop');
+  const fallbackView = state.mode === 'boats' ? 'fleet' : 'shop';
+  const allowed = state.mode === 'boats' ? BOAT_VIEWS : SHOP_VIEWS;
+  state.view = allowed.has(payload.view) ? payload.view : fallbackView;
   state.tab = state.view === 'board' ? 'today' : 'all';
   state.query = '';
   state.qty = {};
@@ -727,10 +747,17 @@ tabsEl.addEventListener('click', async (e) => {
   render();
 });
 
+let searchTimer = 0;
 search.addEventListener('input', () => {
-  state.query = search.value;
-  render();
+  state.query = String(search.value || '').slice(0, 64);
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(render, 80);
 });
+
+content.addEventListener('error', (e) => {
+  const el = e.target;
+  if (el && el.tagName === 'IMG') el.style.display = 'none';
+}, true);
 
 content.addEventListener('click', async (e) => {
   const btn = e.target.closest('button');
@@ -824,7 +851,7 @@ if (!inFiveM) {
   } else {
     openUI({
       view: 'shop',
-      shop: { label: '305 Pier Outfitters', subtitle: 'Vice City tackle', views: ['shop', 'sell', 'tasks', 'board'] },
+      shop: { label: 'Envy Pier Outfitters', subtitle: 'Los Santos tackle', views: ['shop', 'sell', 'tasks', 'board'] },
       ...DEMO,
     });
   }

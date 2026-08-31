@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>305 Fishing</title>
+  <title>Envy Fishing</title>
   <style>html,body{background:transparent!important;background-color:transparent!important;}</style>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -16,21 +16,21 @@
 
       <header class="topbar">
         <div class="brand">
-          <img class="brand-logo" src="brand/the305.png" alt="The 305" />
+          <img class="brand-logo" src="brand/envy.png" alt="Envy Roleplay" width="160" height="106" decoding="async" draggable="false" />
           <div>
-            <strong id="shop-title">305 Fishing</strong>
-            <small id="shop-subtitle">Vice City tackle</small>
+            <strong id="shop-title">Envy Fishing</strong>
+            <small id="shop-subtitle">Los Santos tackle</small>
           </div>
         </div>
 
-        <nav class="nav" id="nav"></nav>
+        <nav class="nav" id="nav" aria-label="Shop sections"></nav>
 
         <div class="profile">
           <div class="profile-copy">
             <strong id="player-name">Angler</strong>
-            <span id="player-role">Licensed 305 angler</span>
+            <span id="player-role">Licensed Envy angler</span>
           </div>
-          <div class="avatar" id="player-avatar">305</div>
+          <div class="avatar" id="player-avatar">ENV</div>
         </div>
       </header>
 
@@ -39,8 +39,8 @@
       <div class="toolbar">
         <div class="tabs" id="tabs"></div>
         <label class="search" id="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="M16.5 16.5 21 21"/></svg>
-          <input id="search" type="text" placeholder="Search the marina..." autocomplete="off" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16.5 16.5 21 21"/></svg>
+          <input id="search" type="text" placeholder="Search Envy tackle..." autocomplete="off" spellcheck="false" maxlength="64" aria-label="Search" />
         </label>
       </div>
 
@@ -48,15 +48,15 @@
 
       <footer class="footer">
         <span class="footer-brand">
-          <img src="brand/the305.png" alt="" />
-          THE 305
+          <img src="brand/envy.png" alt="" width="42" height="28" decoding="async" draggable="false" />
+          ENVY ROLEPLAY
         </span>
         <span class="keychip">ESC Close</span>
       </footer>
     </div>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
 </body>
 </html>
