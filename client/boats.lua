@@ -19,7 +19,7 @@ local FUEL_SCRIPTS = {
 
 local function notify(key, nType, ...)
     lib.notify({
-        title = 'Boat Rental',
+        title = 'Envy Marina',
         description = locale(key, ...),
         type = nType or 'inform',
     })

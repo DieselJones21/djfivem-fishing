@@ -4,7 +4,7 @@ lua54 'yes'
 
 name 'djfivem-fishing'
 author 'DieselJones21'
-description 'Miami 305 ocean, canal, and creek fishing with ox_lib skill checks, ox_inventory, and a matching tackle + boat NUI'
+description 'Envy Roleplay ocean, canal, and creek fishing with ox_lib skill checks, ox_inventory, and a matching tackle + boat NUI'
 version '2.0.0'
 
 shared_scripts {

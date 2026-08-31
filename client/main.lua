@@ -19,7 +19,7 @@ end
 
 local function notify(key, nType, ...)
     lib.notify({
-        title = 'Fishing',
+        title = 'Envy Fishing',
         description = locale(key, ...),
         type = nType or 'inform',
     })
