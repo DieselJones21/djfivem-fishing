@@ -59,8 +59,8 @@ Config.Difficulty = {
 ----------------------------------------------------------------
 Config.Equipment = {
     fishing_rod_basic = {
-        label = 'Driftwood Rod',
-        description = 'A shoreline rod that will get you started. Low luck for trophy fish.',
+        label = 'Canal Rod',
+        description = 'A Vice City canal stick. Gets you started on the seawall.',
         category = 'rods',
         price = 175,
         uses = 200,
@@ -68,8 +68,8 @@ Config.Equipment = {
         weight = 1200,
     },
     fishing_rod_pro = {
-        label = 'Carbon Rod',
-        description = 'Lighter blank with better hook-sets. Improves rare catch rates.',
+        label = 'Biscayne Rod',
+        description = 'Carbon blank for the bay. Better luck on snook and mahi.',
         category = 'rods',
         price = 520,
         uses = 450,
@@ -77,16 +77,25 @@ Config.Equipment = {
         weight = 1100,
     },
     fishing_rod_elite = {
-        label = 'Offshore Rod',
-        description = 'Heavy-action rod built for marlin and shark. Highest rare luck.',
+        label = 'Gulf Stream Rod',
+        description = 'Heavy-action rod for tarpon and shark. Highest rare luck.',
         category = 'rods',
         price = 1450,
         uses = 750,
         rareBonus = 14,
         weight = 1400,
     },
+    fishing_rod_miami = {
+        label = 'Neon 305 Rod',
+        description = 'Signature 305 blank. Built for silver kings after dark.',
+        category = 'rods',
+        price = 2200,
+        uses = 900,
+        rareBonus = 18,
+        weight = 1350,
+    },
     fishing_reel_basic = {
-        label = 'Spin Reel',
+        label = 'South Beach Spin',
         description = 'Reliable spinning reel. Keeps line tension, no extra assist.',
         category = 'reels',
         price = 125,
@@ -94,7 +103,7 @@ Config.Equipment = {
         weight = 450,
     },
     fishing_reel_pro = {
-        label = 'Baitcaster',
+        label = 'Calle Ocho Caster',
         description = 'Smoother drag. Makes skill checks a little more forgiving.',
         category = 'reels',
         price = 380,
@@ -102,7 +111,7 @@ Config.Equipment = {
         weight = 500,
     },
     fishing_reel_elite = {
-        label = 'Tournament Reel',
+        label = 'Midnight Reel',
         description = 'Saltwater drag system. Biggest skill-check window in the kit.',
         category = 'reels',
         price = 980,
@@ -110,44 +119,68 @@ Config.Equipment = {
         weight = 560,
     },
     fishing_line = {
-        label = 'Fishing Line',
-        description = 'Mono spool. Each spool lasts 20 bites before you need another.',
+        label = 'Fluoro Line',
+        description = 'Clear fluoro. Each spool lasts 20 bites.',
         category = 'line',
         price = 4,
         uses = 20,
         weight = 20,
     },
+    fishing_line_braid = {
+        label = '305 Braid',
+        description = 'Pink braid for the night bite. 40 bites a spool.',
+        category = 'line',
+        price = 12,
+        uses = 40,
+        weight = 18,
+    },
     bait_ocean = {
-        label = 'Ocean Bait',
-        description = 'Cut squid and oily chunks. Required to fish the ocean.',
+        label = 'Cut Bait',
+        description = 'Oily chunks. Works the ocean and Biscayne.',
         category = 'bait',
         price = 8,
         weight = 30,
     },
+    bait_shrimp = {
+        label = 'Live Shrimp',
+        description = 'Premium 305 bait. Used first on the ocean if you have it.',
+        category = 'bait',
+        price = 14,
+        weight = 28,
+    },
     bait_lake = {
-        label = 'Lake Bait',
-        description = 'Live worms and panfish jigs. Required on lakes.',
+        label = 'Panfish Bait',
+        description = 'Live worms and jigs. Required on lakes and canals.',
         category = 'bait',
         price = 5,
         weight = 25,
     },
     bait_river = {
-        label = 'River Bait',
-        description = 'Roe sacks and spinner bait. Required on rivers.',
+        label = 'Creek Bait',
+        description = 'Roe and spinner bait. Required on creeks.',
         category = 'bait',
         price = 6,
         weight = 25,
     },
 }
 
+-- String or list. Lists are tried in order so premium bait is spent first.
 Config.BaitByZone = {
-    ocean = 'bait_ocean',
+    ocean = { 'bait_shrimp', 'bait_ocean' },
     lake = 'bait_lake',
     river = 'bait_river',
 }
 
-Config.RodOrder = { 'fishing_rod_elite', 'fishing_rod_pro', 'fishing_rod_basic' }
+Config.RodOrder = { 'fishing_rod_miami', 'fishing_rod_elite', 'fishing_rod_pro', 'fishing_rod_basic' }
 Config.ReelOrder = { 'fishing_reel_elite', 'fishing_reel_pro', 'fishing_reel_basic' }
+Config.LineOrder = { 'fishing_line_braid', 'fishing_line' }
+
+function Config.BaitList(zoneType)
+    local bait = Config.BaitByZone[zoneType]
+    if type(bait) == 'table' then return bait end
+    if type(bait) == 'string' then return { bait } end
+    return {}
+end
 
 ----------------------------------------------------------------
 -- Fish by water type
@@ -205,6 +238,66 @@ Config.Fish = {
         checks = 3,
         rarity = 'legendary',
         description = 'Apex coastal hunter. Bring elite tackle.',
+    },
+    fish_snapper = {
+        label = 'Mangrove Snapper',
+        zone = 'ocean',
+        weight = 22,
+        sell = 28,
+        difficulty = 'easy',
+        checks = 1,
+        rarity = 'common',
+        description = 'Hangs on seawalls and pilings.',
+    },
+    fish_snook = {
+        label = 'Snook',
+        zone = 'ocean',
+        weight = 12,
+        sell = 110,
+        difficulty = 'medium',
+        checks = 2,
+        rarity = 'uncommon',
+        description = 'Linesider under the lights. A 305 classic.',
+    },
+    fish_permit = {
+        label = 'Permit',
+        zone = 'ocean',
+        weight = 8,
+        sell = 88,
+        difficulty = 'medium',
+        checks = 2,
+        rarity = 'uncommon',
+        description = 'Spooky flats fish. Soft hands or it is gone.',
+    },
+    fish_bonefish = {
+        label = 'Bonefish',
+        zone = 'ocean',
+        weight = 7,
+        sell = 185,
+        difficulty = 'hard',
+        checks = 2,
+        rarity = 'rare',
+        description = 'Grey ghost of the flats. Runs like a stolen car.',
+    },
+    fish_mahi = {
+        label = 'Mahi-Mahi',
+        zone = 'ocean',
+        weight = 6,
+        sell = 240,
+        difficulty = 'hard',
+        checks = 2,
+        rarity = 'rare',
+        description = 'Gulf Stream gold. Hits fast and jumps harder.',
+    },
+    fish_tarpon = {
+        label = 'Silver King',
+        zone = 'ocean',
+        weight = 3,
+        sell = 520,
+        difficulty = 'hard',
+        checks = 3,
+        rarity = 'legendary',
+        description = 'The 305 trophy. Bring the Neon rod.',
     },
 
     -- Lakes
@@ -267,6 +360,26 @@ Config.Fish = {
         checks = 2,
         rarity = 'rare',
         description = 'Night feeder. Heavy, ugly, and worth the wait.',
+    },
+    fish_tilapia = {
+        label = 'Tilapia',
+        zone = 'lake',
+        weight = 20,
+        sell = 14,
+        difficulty = 'easy',
+        checks = 1,
+        rarity = 'common',
+        description = 'Warm-water panfish stacked in the canals.',
+    },
+    fish_peacock_bass = {
+        label = 'Peacock Bass',
+        zone = 'lake',
+        weight = 10,
+        sell = 72,
+        difficulty = 'medium',
+        checks = 2,
+        rarity = 'uncommon',
+        description = 'Miami canal celebrity. Hits like a freight train.',
     },
 
     -- Rivers
@@ -418,61 +531,61 @@ Config.ZoneCheck.nearbySq = Config.ZoneCheck.nearbyRadius * Config.ZoneCheck.nea
 Config.Shops = {
     {
         id = 'delperro',
-        label = 'Del Perro Tackle',
-        subtitle = 'Ocean outfitter',
+        label = '305 Pier Outfitters',
+        subtitle = 'Vice City tackle',
         ped = `s_m_m_dockwork_01`,
         coords = vec4(-1845.09, -1195.53, 19.18, 166.30),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
-        blip = { sprite = 68, color = 1, scale = 0.85, label = 'Fishing Shop' },
+        blip = { sprite = 68, color = 8, scale = 0.85, label = '305 Tackle' },
         defaultView = 'shop',
     },
     {
         id = 'chumash',
-        label = 'Chumash Bait & Tackle',
+        label = 'Sunset Bait Co.',
         subtitle = 'Pier shop',
         ped = `a_m_m_beach_01`,
         coords = vec4(-3426.55, 982.16, 8.43, 96.0),
         scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
-        blip = { sprite = 68, color = 1, scale = 0.85, label = 'Fishing Shop' },
+        blip = { sprite = 68, color = 8, scale = 0.85, label = '305 Tackle' },
         defaultView = 'shop',
     },
     {
         id = 'alamo',
-        label = 'Alamo Lakeside Tackle',
-        subtitle = 'Freshwater shop',
+        label = 'Inland 305 Tackle',
+        subtitle = 'Canal shop',
         ped = `a_m_m_hillbilly_01`,
         coords = vec4(1301.09, 4319.37, 38.18, 311.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
-        blip = { sprite = 68, color = 1, scale = 0.85, label = 'Fishing Shop' },
+        blip = { sprite = 68, color = 8, scale = 0.85, label = '305 Tackle' },
         defaultView = 'shop',
     },
     {
         id = 'cassidy',
-        label = 'Cassidy Creek Outfitters',
-        subtitle = 'River shop',
+        label = 'Creek & Palm Outfitters',
+        subtitle = 'Creek shop',
         ped = `a_m_m_farmer_01`,
         coords = vec4(-811.42, 4394.18, 16.96, 192.0),
         scenario = 'WORLD_HUMAN_SMOKING',
-        blip = { sprite = 68, color = 1, scale = 0.85, label = 'Fishing Shop' },
+        blip = { sprite = 68, color = 8, scale = 0.85, label = '305 Tackle' },
         defaultView = 'shop',
     },
     {
         id = 'docks',
-        label = 'La Puerta Fish Buyer',
-        subtitle = 'Wholesale market',
+        label = 'Vice Wholesale Market',
+        subtitle = 'Cash for catch',
         ped = `s_m_m_linecook_01`,
         coords = vec4(-1038.64, -1397.12, 5.55, 75.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
-        blip = { sprite = 356, color = 1, scale = 0.8, label = 'Fish Buyer' },
+        blip = { sprite = 356, color = 8, scale = 0.8, label = '305 Fish Buyer' },
         defaultView = 'sell',
     },
 }
 
 Config.ShopCatalogOrder = {
-    'fishing_rod_basic', 'fishing_rod_pro', 'fishing_rod_elite',
+    'fishing_rod_basic', 'fishing_rod_pro', 'fishing_rod_elite', 'fishing_rod_miami',
     'fishing_reel_basic', 'fishing_reel_pro', 'fishing_reel_elite',
-    'fishing_line',
-    'bait_ocean', 'bait_lake', 'bait_river',
+    'fishing_line', 'fishing_line_braid',
+    'bait_ocean', 'bait_shrimp', 'bait_lake', 'bait_river',
 }
 
 Config.ShopViews = { 'shop', 'sell', 'tasks', 'board' }
@@ -486,7 +599,7 @@ Config.LeaderboardSize = 10
 Config.DailyTasks = {
     {
         id = 'catch_any',
-        label = 'Fill the cooler',
+        label = 'Pack the cooler',
         description = 'Land 8 fish of any kind today.',
         type = 'catch',
         count = 8,
@@ -494,7 +607,7 @@ Config.DailyTasks = {
     },
     {
         id = 'catch_ocean',
-        label = 'Saltwater run',
+        label = 'Biscayne run',
         description = 'Catch 5 ocean fish.',
         type = 'catch_zone',
         zone = 'ocean',
@@ -503,24 +616,24 @@ Config.DailyTasks = {
     },
     {
         id = 'catch_fresh',
-        label = 'Freshwater grind',
-        description = 'Catch 5 lake or river fish.',
+        label = 'Canal grind',
+        description = 'Catch 5 lake or creek fish.',
         type = 'catch_fresh',
         count = 5,
         reward = { money = 180 },
     },
     {
         id = 'catch_trophy',
-        label = 'Trophy hunt',
+        label = 'Silver King',
         description = 'Land a rare or legendary fish.',
         type = 'catch_rarity',
         rarities = { rare = true, legendary = true },
         count = 1,
-        reward = { money = 400, items = { { 'bait_ocean', 5 }, { 'fishing_line', 3 } } },
+        reward = { money = 400, items = { { 'bait_shrimp', 5 }, { 'fishing_line_braid', 2 } } },
     },
     {
         id = 'catch_offshore',
-        label = 'Go offshore',
+        label = 'Gulf Stream',
         description = 'Catch 3 fish at an offshore hotspot.',
         type = 'catch_offshore',
         count = 3,
@@ -528,7 +641,7 @@ Config.DailyTasks = {
     },
     {
         id = 'sell_cash',
-        label = 'Cash out',
+        label = 'Vice payout',
         description = 'Sell $400 worth of fish today.',
         type = 'sell',
         count = 400,
@@ -536,8 +649,8 @@ Config.DailyTasks = {
     },
     {
         id = 'rent_boat',
-        label = 'Launch a skiff',
-        description = 'Rent a boat from any fishing dock.',
+        label = 'Launch the 305',
+        description = 'Rent a boat from any marina.',
         type = 'boat',
         count = 1,
         reward = { money = 75 },
@@ -599,47 +712,47 @@ end
 Config.BoatDocks = {
     {
         id = 'vespucci',
-        label = 'Vespucci Boat Rental',
-        subtitle = 'Puerto Del Sol marina',
+        label = '305 Marina',
+        subtitle = 'Puerto Del Sol',
         ped = `s_m_y_baywatch_01`,
         coords = vec4(-806.42, -1496.64, 1.60, 110.0),
         spawn = vec4(-858.00, -1528.00, 0.20, 110.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
         boats = { 'freeman', 'gradywhite', 'yellowfin' },
-        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Boat Rental' },
+        blip = { sprite = 410, color = 8, scale = 0.8, label = '305 Marina' },
     },
     {
         id = 'chumash',
-        label = 'Chumash Boat Rental',
+        label = 'Sunset Marina',
         subtitle = 'Pier launch',
         ped = `a_m_y_beach_01`,
         coords = vec4(-3428.10, 995.20, 8.30, 90.0),
         spawn = vec4(-3485.00, 968.40, 0.40, 90.0),
         scenario = 'WORLD_HUMAN_STAND_IMPATIENT',
         boats = { 'freeman', 'gradywhite', 'yellowfin' },
-        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Boat Rental' },
+        blip = { sprite = 410, color = 8, scale = 0.8, label = '305 Marina' },
     },
     {
         id = 'paleto',
-        label = 'Paleto Boat Rental',
+        label = 'North Shore Marina',
         subtitle = 'Bay launch',
         ped = `a_m_m_farmer_01`,
         coords = vec4(-247.80, 6548.40, 11.10, 140.0),
         spawn = vec4(-320.00, 6665.00, 0.40, 40.0),
         scenario = 'WORLD_HUMAN_SMOKING',
         boats = { 'freeman', 'gradywhite', 'yellowfin' },
-        blip = { sprite = 410, color = 3, scale = 0.8, label = 'Boat Rental' },
+        blip = { sprite = 410, color = 8, scale = 0.8, label = '305 Marina' },
     },
     {
         id = 'alamo',
-        label = 'Alamo Boat Rental',
-        subtitle = 'Lakeside launch',
+        label = 'Inland 305 Dock',
+        subtitle = 'Canal launch',
         ped = `a_m_m_hillbilly_02`,
         coords = vec4(1540.55, 3907.20, 31.70, 200.0),
         spawn = vec4(1595.00, 3865.00, 30.40, 170.0),
         scenario = 'WORLD_HUMAN_CLIPBOARD',
         boats = { 'freeman', 'gradywhite', 'yellowfin' },
-        blip = { sprite = 410, color = 2, scale = 0.8, label = 'Boat Rental' },
+        blip = { sprite = 410, color = 8, scale = 0.8, label = '305 Marina' },
     },
 }
 

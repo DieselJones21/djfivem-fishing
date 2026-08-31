@@ -9,7 +9,7 @@ local cachedCatalog
 
 local RODS = Config.RodOrder
 local REELS = Config.ReelOrder
-local LINES = { 'fishing_line' }
+local LINES = Config.LineOrder or { 'fishing_line' }
 local ZONES = Config.Zones
 local ZONE_COUNT = #ZONES
 
@@ -107,8 +107,9 @@ local function starterMetadata(item)
     return { durability = 100 }
 end
 
-local function lineUsesFromSlot(slot)
-    local maxUses = Config.Equipment.fishing_line and Config.Equipment.fishing_line.uses or 20
+local function lineUsesFromSlot(slot, itemName)
+    local def = itemName and Config.Equipment[itemName]
+    local maxUses = (def and def.uses) or (Config.Equipment.fishing_line and Config.Equipment.fishing_line.uses) or 20
     local uses = slot.metadata and slot.metadata.uses
     if type(uses) == 'number' then
         return uses, maxUses
@@ -131,7 +132,7 @@ local function consumeLine(src)
     local name, slot = findBest(src, LINES)
     if not slot then return false end
 
-    local uses, maxUses = lineUsesFromSlot(slot)
+    local uses, maxUses = lineUsesFromSlot(slot, name)
     uses = uses - 1
 
     -- Split one spool off a stack so the remaining spools keep full uses.
@@ -174,7 +175,11 @@ local function consumeDurability(src, slot, itemName, uses)
 end
 
 local function baitFor(zoneType)
-    return Config.BaitByZone[zoneType]
+    return Config.BaitList(zoneType)[1]
+end
+
+local function findBait(src, zoneType)
+    return findBest(src, Config.BaitList(zoneType))
 end
 
 local function catalog()
@@ -300,8 +305,11 @@ lib.callback.register('djfivem-fishing:openShop', function(source, shopId)
 end)
 
 lib.callback.register('djfivem-fishing:buy', function(source, shopId, itemName, amount)
+    if not Bridge.RateLimit(source, 'buy', 0.25) then
+        return { ok = false, error = 'notify_busy' }
+    end
     amount = math.floor(tonumber(amount) or 0)
-    if type(shopId) ~= 'string' or not isNearShop(source, shopId) then
+    if type(shopId) ~= 'string' or type(itemName) ~= 'string' or not isNearShop(source, shopId) then
         return { ok = false, error = 'notify_too_far' }
     end
     if amount < 1 or amount > Config.MaxBuyAmount then
@@ -341,13 +349,16 @@ lib.callback.register('djfivem-fishing:buy', function(source, shopId, itemName, 
 end)
 
 lib.callback.register('djfivem-fishing:sell', function(source, shopId, itemName, amount)
+    if not Bridge.RateLimit(source, 'sell', 0.25) then
+        return { ok = false, error = 'notify_busy' }
+    end
     amount = math.floor(tonumber(amount) or 0)
-    if type(shopId) ~= 'string' or not isNearShop(source, shopId) then
+    if type(shopId) ~= 'string' or type(itemName) ~= 'string' or not isNearShop(source, shopId) then
         return { ok = false, error = 'notify_too_far' }
     end
 
     local fish = Config.Fish[itemName]
-    if not fish or amount < 1 then
+    if not fish or amount < 1 or amount > 200 then
         return { ok = false, error = 'notify_invalid' }
     end
 
@@ -379,6 +390,9 @@ lib.callback.register('djfivem-fishing:sell', function(source, shopId, itemName,
 end)
 
 lib.callback.register('djfivem-fishing:sellAll', function(source, shopId)
+    if not Bridge.RateLimit(source, 'sellAll', 0.75) then
+        return { ok = false, error = 'notify_busy' }
+    end
     if type(shopId) ~= 'string' or not isNearShop(source, shopId) then
         return { ok = false, error = 'notify_too_far' }
     end
@@ -433,7 +447,7 @@ lib.callback.register('djfivem-fishing:prepareCast', function(source, info)
         return { ok = false, error = 'notify_need_zone' }
     end
     zone = zone or { type = info.zone, name = info.zoneName }
-    if not zone.type or not Config.BaitByZone[zone.type] then
+    if not zone.type or #Config.BaitList(zone.type) == 0 then
         return { ok = false, error = 'notify_need_zone' }
     end
 
@@ -465,10 +479,11 @@ lib.callback.register('djfivem-fishing:prepareCast', function(source, info)
         return { ok = false, error = 'notify_need_line' }
     end
 
-    local baitName = baitFor(zone.type)
-    if (exports.ox_inventory:GetItemCount(source, baitName) or 0) < 1 then
-        local bait = Config.Equipment[baitName]
-        return { ok = false, error = 'notify_need_bait', errorArg = bait and bait.label or baitName }
+    local baitName, baitSlot = findBait(source, zone.type)
+    if not baitName then
+        local fallback = baitFor(zone.type)
+        local bait = Config.Equipment[fallback]
+        return { ok = false, error = 'notify_need_bait', errorArg = bait and bait.label or fallback }
     end
 
     pending[source] = {
@@ -481,6 +496,7 @@ lib.callback.register('djfivem-fishing:prepareCast', function(source, info)
         reelSlot = reelSlot.slot,
         lineSlot = lineSlot.slot,
         bait = baitName,
+        baitSlot = baitSlot and baitSlot.slot,
         stage = 'prepared',
         expires = now() + 90,
     }
@@ -617,6 +633,9 @@ lib.callback.register('djfivem-fishing:resolveCast', function(source, success, r
 end)
 
 lib.callback.register('djfivem-fishing:claimTask', function(source, shopId, taskId)
+    if not Bridge.RateLimit(source, 'claim', 0.5) then
+        return { ok = false, error = 'notify_busy' }
+    end
     if type(shopId) ~= 'string' or not isNearShop(source, shopId) then
         return { ok = false, error = 'notify_too_far' }
     end
@@ -631,6 +650,7 @@ end)
 AddEventHandler('playerDropped', function()
     clearPending(source)
     lastResolve[source] = nil
+    Bridge.ClearRate(source)
 end)
 
 lib.addCommand('fishingkit', {
@@ -638,9 +658,11 @@ lib.addCommand('fishingkit', {
     restricted = 'group.admin',
 }, function(source)
     local kit = {
-        { 'fishing_rod_pro', 1 },
+        { 'fishing_rod_miami', 1 },
         { 'fishing_reel_pro', 1 },
-        { 'fishing_line', 25 },
+        { 'fishing_line_braid', 10 },
+        { 'fishing_line', 15 },
+        { 'bait_shrimp', 15 },
         { 'bait_ocean', 15 },
         { 'bait_lake', 15 },
         { 'bait_river', 15 },
