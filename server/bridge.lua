@@ -1,5 +1,31 @@
 Bridge = {}
 
+local actionStamp = {}
+
+function Bridge.RateLimit(src, key, wait)
+    wait = wait or 0.35
+    local now = os.clock()
+    local bucket = actionStamp[src]
+    if not bucket then
+        bucket = {}
+        actionStamp[src] = bucket
+    end
+    local last = bucket[key]
+    if last and (now - last) < wait then
+        return false
+    end
+    bucket[key] = now
+    return true
+end
+
+function Bridge.ClearRate(src)
+    actionStamp[src] = nil
+end
+
+AddEventHandler('playerDropped', function()
+    actionStamp[source] = nil
+end)
+
 local framework
 local ESX
 local QBCore

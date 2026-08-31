@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DJ Fishing · DJ FIVEM SCRIPTS</title>
+  <title>305 Fishing</title>
   <style>html,body{background:transparent!important;background-color:transparent!important;}</style>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -16,38 +16,21 @@
 
       <header class="topbar">
         <div class="brand">
-          <img class="brand-logo" src="brand/logo.png" alt="DJ FIVEM SCRIPTS" />
+          <img class="brand-logo" src="brand/the305.png" alt="The 305" />
           <div>
-            <strong>DJ Fishing</strong>
-            <small id="shop-subtitle">Tackle &amp; market</small>
+            <strong id="shop-title">305 Fishing</strong>
+            <small id="shop-subtitle">Vice City tackle</small>
           </div>
         </div>
 
-        <nav class="nav" id="nav">
-          <button type="button" class="nav-btn active" data-view="shop">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16l-1.2 12.4A2 2 0 0 1 16.81 21H7.19a2 2 0 0 1-1.99-1.6L4 7z"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>
-            Store
-          </button>
-          <button type="button" class="nav-btn" data-view="sell">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12c4-6 12-6 16 0-4 6-12 6-16 0z"/><circle cx="12" cy="12" r="2.2"/></svg>
-            Sell
-          </button>
-          <button type="button" class="nav-btn" data-view="tasks">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-            Tasks
-          </button>
-          <button type="button" class="nav-btn" data-view="board">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5M4 19h16M8 15v4M12 11v8M16 8v11"/></svg>
-            Board
-          </button>
-        </nav>
+        <nav class="nav" id="nav"></nav>
 
         <div class="profile">
           <div class="profile-copy">
             <strong id="player-name">Angler</strong>
-            <span>Licensed angler</span>
+            <span id="player-role">Licensed 305 angler</span>
           </div>
-          <div class="avatar" id="player-avatar">DJ</div>
+          <div class="avatar" id="player-avatar">305</div>
         </div>
       </header>
 
@@ -55,9 +38,9 @@
 
       <div class="toolbar">
         <div class="tabs" id="tabs"></div>
-        <label class="search">
+        <label class="search" id="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6.5"/><path d="M16.5 16.5 21 21"/></svg>
-          <input id="search" type="text" placeholder="Search gear or catch..." autocomplete="off" />
+          <input id="search" type="text" placeholder="Search the marina..." autocomplete="off" />
         </label>
       </div>
 
@@ -65,8 +48,8 @@
 
       <footer class="footer">
         <span class="footer-brand">
-          <img src="brand/logo.png" alt="" />
-          DJ FIVEM SCRIPTS
+          <img src="brand/the305.png" alt="" />
+          THE 305
         </span>
         <span class="keychip">ESC Close</span>
       </footer>

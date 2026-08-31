@@ -170,53 +170,63 @@ local function despawnDockPed(dock)
     dockPeds[dock.id] = nil
 end
 
+local boatOpen = false
+local currentDock
+
+function IsBoatMenuOpen()
+    return boatOpen
+end
+
+function CloseBoatMenu(skipNui)
+    if not boatOpen then return end
+    boatOpen = false
+    currentDock = nil
+    if not skipNui then
+        SetNuiFocus(false, false)
+        SendNUIMessage({ action = 'close' })
+    end
+end
+
 function ReturnBoat(dock)
-    local result = lib.callback.await('djfivem-fishing:returnBoat', false, dock.id)
+    local result = lib.callback.await('djfivem-fishing:returnBoat', false, dock and dock.id or (currentDock and currentDock.id))
     if result and result.ok then
         notify('notify_boat_returned', 'success', result.deposit or 0)
     else
         notify(result and result.error or 'notify_no_rental', 'error')
     end
-end
-
-local function formatLeft(sec)
-    sec = math.floor(tonumber(sec) or 0)
-    if sec >= 3600 then
-        return ('%dh %dm left'):format(math.floor(sec / 3600), math.floor((sec % 3600) / 60))
-    end
-    if sec >= 60 then
-        return ('%dm %ds left'):format(math.floor(sec / 60), sec % 60)
-    end
-    return ('%ds left'):format(sec)
+    return result
 end
 
 local function rentBoat(dock, boatId, durationId)
     local authorized = lib.callback.await('djfivem-fishing:rentBoat', false, dock.id, boatId, durationId)
     if not authorized or not authorized.ok then
         notify(authorized and authorized.error or 'notify_boat_fail', 'error')
-        return
+        return authorized
     end
 
     local netId, veh, spawnErr = spawnRentalBoat(authorized)
     if not netId then
         lib.callback.await('djfivem-fishing:abortBoat', false)
         notify(spawnErr or 'notify_boat_fail', 'error')
-        return
+        return { ok = false, error = spawnErr or 'notify_boat_fail' }
     end
 
     local confirmed = lib.callback.await('djfivem-fishing:confirmBoat', false, netId)
     if confirmed and confirmed.ok then
         notify('notify_boat_rented', 'success', confirmed.label, confirmed.durationLabel or '', confirmed.price, confirmed.deposit)
-    else
-        if veh and DoesEntityExist(veh) then
-            DeleteEntity(veh)
-        end
-        notify(confirmed and confirmed.error or 'notify_boat_fail', 'error')
+        CloseBoatMenu()
+        return confirmed
     end
+
+    if veh and DoesEntityExist(veh) then
+        DeleteEntity(veh)
+    end
+    notify(confirmed and confirmed.error or 'notify_boat_fail', 'error')
+    return confirmed or { ok = false, error = 'notify_boat_fail' }
 end
 
 function OpenBoatMenu(dock)
-    if IsFishing() or IsShopOpen() then return end
+    if IsFishing() or boatOpen or (IsTackleShopOpen and IsTackleShopOpen()) then return end
 
     local payload = lib.callback.await('djfivem-fishing:boatMenu', false, dock.id)
     if not payload or not payload.ok then
@@ -224,58 +234,54 @@ function OpenBoatMenu(dock)
         return
     end
 
-    local options = {}
-    if payload.rented then
-        local time = payload.rented.remaining and formatLeft(payload.rented.remaining) or locale('boat_until_return')
-        options[#options + 1] = {
-            title = locale('boat_return'),
-            description = locale('boat_return_desc', payload.rented.label, payload.rented.deposit or 0, time),
-            icon = 'anchor',
-            onSelect = function()
-                ReturnBoat(dock)
-            end,
-        }
-    end
-
-    for i = 1, #payload.boats do
-        local boat = payload.boats[i]
-        options[#options + 1] = {
-            title = boat.label,
-            description = boat.description,
-            icon = 'ship',
-            disabled = payload.rented ~= nil,
-            onSelect = function()
-                local times = {}
-                for t = 1, #(boat.times or {}) do
-                    local slot = boat.times[t]
-                    times[#times + 1] = {
-                        title = slot.label,
-                        description = locale('boat_duration_desc', slot.price, slot.deposit, slot.minutes),
-                        icon = 'clock',
-                        disabled = payload.rented ~= nil or (payload.cash or 0) < slot.total,
-                        onSelect = function()
-                            rentBoat(dock, boat.id, slot.id)
-                        end,
-                    }
-                end
-                lib.registerContext({
-                    id = 'djfishing_boat_time',
-                    title = boat.label,
-                    menu = 'djfishing_boats',
-                    options = times,
-                })
-                lib.showContext('djfishing_boat_time')
-            end,
-        }
-    end
-
-    lib.registerContext({
-        id = 'djfishing_boats',
-        title = payload.dock.label,
-        options = options,
+    boatOpen = true
+    currentDock = dock
+    SetNuiFocus(true, true)
+    SendNUIMessage({
+        action = 'open',
+        data = {
+            mode = 'boats',
+            view = payload.rented and 'active' or 'fleet',
+            dock = payload.dock,
+            player = { name = payload.playerName, cash = payload.cash or 0 },
+            boats = payload.boats or {},
+            rented = payload.rented,
+            cash = payload.cash or 0,
+        },
     })
-    lib.showContext('djfishing_boats')
 end
+
+local function refreshBoatUi()
+    if not boatOpen or not currentDock then return nil end
+    return lib.callback.await('djfivem-fishing:boatMenu', false, currentDock.id)
+end
+
+RegisterNUICallback('rentBoat', function(data, cb)
+    if not boatOpen or not currentDock then
+        cb({ ok = false, error = 'notify_too_far' })
+        return
+    end
+    local boatId = data and data.boat
+    local durationId = data and data.duration
+    if type(boatId) ~= 'string' or type(durationId) ~= 'string' then
+        cb({ ok = false, error = 'notify_invalid' })
+        return
+    end
+    local result = rentBoat(currentDock, boatId, durationId) or { ok = false }
+    cb(result)
+end)
+
+RegisterNUICallback('returnBoat', function(_, cb)
+    if not boatOpen or not currentDock then
+        cb({ ok = false, error = 'notify_too_far' })
+        return
+    end
+    local result = ReturnBoat(currentDock)
+    if result and result.ok then
+        result.refresh = refreshBoatUi()
+    end
+    cb(result or { ok = false })
+end)
 
 function StartBoatDocks(useInteract)
     for i = 1, #Config.BoatDocks do

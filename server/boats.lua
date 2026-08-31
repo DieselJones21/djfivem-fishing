@@ -102,6 +102,9 @@ local function catalogFor(dock)
 end
 
 lib.callback.register('djfivem-fishing:boatMenu', function(source, dockId)
+    if not Bridge.RateLimit(source, 'boatMenu', 0.2) then
+        return { ok = false, error = 'notify_busy' }
+    end
     local dock = type(dockId) == 'string' and docksById[dockId]
     if not dock or not isNearDock(source, dock) then
         return { ok = false, error = 'notify_too_far' }
@@ -124,10 +127,14 @@ lib.callback.register('djfivem-fishing:boatMenu', function(source, dockId)
             durationLabel = rental.durationLabel,
         } or nil,
         cash = Bridge.GetMoney(source),
+        playerName = Bridge.GetPlayerName(source),
     }
 end)
 
 lib.callback.register('djfivem-fishing:rentBoat', function(source, dockId, boatId, durationId)
+    if not Bridge.RateLimit(source, 'rentBoat', 0.8) then
+        return { ok = false, error = 'notify_busy' }
+    end
     local dock = type(dockId) == 'string' and docksById[dockId]
     local boat = type(boatId) == 'string' and Config.BoatCatalog[boatId]
     local duration = Config.GetBoatDuration(durationId)
@@ -225,6 +232,19 @@ lib.callback.register('djfivem-fishing:confirmBoat', function(source, netId)
         return { ok = false, error = 'notify_boat_fail' }
     end
 
+    local dock = docksById[pending.dock]
+    if dock then
+        local boatCoords = GetEntityCoords(entity)
+        if #(boatCoords - dock.spawnPos) > 40.0 then
+            refundPending(source)
+            return { ok = false, error = 'notify_boat_fail' }
+        end
+        if not isNearDock(source, dock, 20.0) then
+            refundPending(source)
+            return { ok = false, error = 'notify_too_far' }
+        end
+    end
+
     pendingSpawns[source] = nil
     rentals[source] = {
         entity = entity,
@@ -261,6 +281,9 @@ lib.callback.register('djfivem-fishing:abortBoat', function(source)
 end)
 
 lib.callback.register('djfivem-fishing:returnBoat', function(source, dockId)
+    if not Bridge.RateLimit(source, 'returnBoat', 0.6) then
+        return { ok = false, error = 'notify_busy' }
+    end
     local rental = rentals[source]
     if not rental then
         return { ok = false, error = 'notify_no_rental' }

@@ -7,21 +7,26 @@ const app = document.getElementById('app');
 const content = document.getElementById('content');
 const stats = document.getElementById('stats');
 const tabsEl = document.getElementById('tabs');
+const navEl = document.getElementById('nav');
 const search = document.getElementById('search');
 const toastEl = document.getElementById('toast');
 const playerNameEl = document.getElementById('player-name');
 const playerAvatarEl = document.getElementById('player-avatar');
+const playerRoleEl = document.getElementById('player-role');
+const titleEl = document.getElementById('shop-title');
 const subtitleEl = document.getElementById('shop-subtitle');
 
 const ICONS = {
-  rods: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20 20 4"/><path d="M14 4h6v6"/><path d="M4 20c2-3 6-3 8 0"/></svg>',
-  reels: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 5v3M12 16v3M5 12h3M16 12h3"/></svg>',
-  line: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 19c8-2 6-8 14-10"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="9" r="2"/></svg>',
-  bait: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 13c6-8 14-8 16 0-2 4-6 6-8 6s-6-2-8-6z"/><circle cx="15" cy="11" r="1"/></svg>',
+  shop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16l-1.2 12.4A2 2 0 0 1 16.81 21H7.19a2 2 0 0 1-1.99-1.6L4 7z"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/></svg>',
+  sell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12c4-6 12-6 16 0-4 6-12 6-16 0z"/><circle cx="12" cy="12" r="2.2"/></svg>',
+  tasks: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  board: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5M4 19h16M8 15v4M12 11v8M16 8v11"/></svg>',
+  fleet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17h18l-2-7H5l-2 7z"/><path d="M12 4 5 10h14L12 4z"/><path d="M4 20h16"/></svg>',
+  active: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>',
   fish: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12s5-6 11-6c5 0 7 6 7 6s-2 6-7 6c-6 0-11-6-11-6z"/><path d="M3 12l4 4M3 12l4-4"/><circle cx="16" cy="12" r="1"/></svg>',
 };
 
-const BRAND_LOGO = '<img class="empty-logo" src="brand/logo.png" alt="DJ FIVEM SCRIPTS" />';
+const BRAND_LOGO = '<img class="empty-logo" src="brand/the305.png" alt="The 305" />';
 
 function emptyState(title, copy, extraClass) {
   const cls = extraClass ? ` empty-${extraClass}` : '';
@@ -48,49 +53,69 @@ const CATEGORIES = [
 const SELL_TABS = [
   { id: 'all', label: 'All catch' },
   { id: 'ocean', label: 'Ocean' },
-  { id: 'lake', label: 'Lakes' },
-  { id: 'river', label: 'Rivers' },
+  { id: 'lake', label: 'Canals' },
+  { id: 'river', label: 'Creeks' },
+];
+
+const BOARD_TABS = [
+  { id: 'today', label: 'Today' },
+  { id: 'all', label: 'All time' },
+];
+
+const SHOP_NAV = [
+  { id: 'shop', label: 'Store', icon: 'shop' },
+  { id: 'sell', label: 'Sell', icon: 'sell' },
+  { id: 'tasks', label: 'Tasks', icon: 'tasks' },
+  { id: 'board', label: 'Board', icon: 'board' },
+];
+
+const BOAT_NAV = [
+  { id: 'fleet', label: 'Fleet', icon: 'fleet' },
+  { id: 'active', label: 'Active', icon: 'active' },
 ];
 
 const DEMO = {
   ok: true,
   player: { name: 'MoodyNewt8638', cash: 12450 },
   catalog: [
-    { item: 'fishing_rod_basic', label: 'Driftwood Rod', description: 'A shoreline rod that will get you started. Low luck for trophy fish.', category: 'rods', price: 175, uses: 200 },
-    { item: 'fishing_rod_pro', label: 'Carbon Rod', description: 'Lighter blank with better hook-sets. Improves rare catch rates.', category: 'rods', price: 520, uses: 450 },
-    { item: 'fishing_rod_elite', label: 'Offshore Rod', description: 'Heavy-action rod built for marlin and shark. Highest rare luck.', category: 'rods', price: 1450, uses: 750 },
-    { item: 'fishing_reel_basic', label: 'Spin Reel', description: 'Reliable spinning reel. Keeps line tension, no extra assist.', category: 'reels', price: 125, uses: 250 },
-    { item: 'fishing_reel_pro', label: 'Baitcaster', description: 'Smoother drag. Makes skill checks a little more forgiving.', category: 'reels', price: 380, uses: 500 },
-    { item: 'fishing_reel_elite', label: 'Tournament Reel', description: 'Saltwater drag system. Biggest skill-check window in the kit.', category: 'reels', price: 980, uses: 850 },
-    { item: 'fishing_line', label: 'Fishing Line', description: 'Mono spool. Each spool lasts 20 bites before you need another.', category: 'line', price: 4, uses: 20 },
-    { item: 'bait_ocean', label: 'Ocean Bait', description: 'Cut squid and oily chunks. Required to fish the ocean.', category: 'bait', price: 8 },
-    { item: 'bait_lake', label: 'Lake Bait', description: 'Live worms and panfish jigs. Required on lakes.', category: 'bait', price: 5 },
-    { item: 'bait_river', label: 'River Bait', description: 'Roe sacks and spinner bait. Required on rivers.', category: 'bait', price: 6 },
+    { item: 'fishing_rod_basic', label: 'Canal Rod', description: 'A Vice City canal stick. Gets you started on the seawall.', category: 'rods', price: 175, uses: 200 },
+    { item: 'fishing_rod_pro', label: 'Biscayne Rod', description: 'Carbon blank for the bay. Better luck on snook and mahi.', category: 'rods', price: 520, uses: 450 },
+    { item: 'fishing_rod_elite', label: 'Gulf Stream Rod', description: 'Heavy-action rod for tarpon and shark. Highest rare luck.', category: 'rods', price: 1450, uses: 750 },
+    { item: 'fishing_rod_miami', label: 'Neon 305 Rod', description: 'Signature 305 blank. Built for silver kings after dark.', category: 'rods', price: 2200, uses: 900 },
+    { item: 'fishing_reel_basic', label: 'South Beach Spin', description: 'Reliable spinning reel. Keeps line tension, no extra assist.', category: 'reels', price: 125, uses: 250 },
+    { item: 'fishing_reel_pro', label: 'Calle Ocho Caster', description: 'Smoother drag. Makes skill checks a little more forgiving.', category: 'reels', price: 380, uses: 500 },
+    { item: 'fishing_reel_elite', label: 'Midnight Reel', description: 'Saltwater drag system. Biggest skill-check window in the kit.', category: 'reels', price: 980, uses: 850 },
+    { item: 'fishing_line', label: 'Fluoro Line', description: 'Clear fluoro. Each spool lasts 20 bites.', category: 'line', price: 4, uses: 20 },
+    { item: 'fishing_line_braid', label: '305 Braid', description: 'Pink braid for the night bite. 40 bites a spool.', category: 'line', price: 12, uses: 40 },
+    { item: 'bait_ocean', label: 'Cut Bait', description: 'Oily chunks. Works the ocean and Biscayne.', category: 'bait', price: 8 },
+    { item: 'bait_shrimp', label: 'Live Shrimp', description: 'Premium 305 bait. Preferred on the ocean if you have it.', category: 'bait', price: 14 },
+    { item: 'bait_lake', label: 'Panfish Bait', description: 'Live worms and jigs. Required on lakes and canals.', category: 'bait', price: 5 },
+    { item: 'bait_river', label: 'Creek Bait', description: 'Roe and spinner bait. Required on creeks.', category: 'bait', price: 6 },
   ],
   fish: [
-    { item: 'fish_sardine', label: 'Sardine', description: 'Dense schooling baitfish. Easy money on the coast.', zone: 'ocean', rarity: 'common', price: 15, count: 6 },
-    { item: 'fish_rockfish', label: 'Rockfish', description: 'Bottom dweller around pilings and reefs.', zone: 'ocean', rarity: 'common', price: 32, count: 3 },
-    { item: 'fish_tuna', label: 'Tuna', description: 'Fast pelagic. Puts a real bend in the rod.', zone: 'ocean', rarity: 'uncommon', price: 95, count: 1 },
-    { item: 'fish_bluegill', label: 'Bluegill', description: 'Panfish stacked under docks and weeds.', zone: 'lake', rarity: 'common', price: 12, count: 4 },
-    { item: 'fish_largemouth_bass', label: 'Largemouth Bass', description: 'Ambush predator in the pads.', zone: 'lake', rarity: 'uncommon', price: 52, count: 2 },
-    { item: 'fish_salmon', label: 'Salmon', description: 'Runs the current. Staple river paycheck.', zone: 'river', rarity: 'uncommon', price: 58, count: 2 },
-    { item: 'fish_striper', label: 'Striper', description: 'Striped bass pushing up from the estuary.', zone: 'river', rarity: 'rare', price: 96, count: 1 },
+    { item: 'fish_snapper', label: 'Mangrove Snapper', description: 'Hangs on seawalls and pilings.', zone: 'ocean', rarity: 'common', price: 28, count: 4 },
+    { item: 'fish_snook', label: 'Snook', description: 'Linesider under the lights.', zone: 'ocean', rarity: 'uncommon', price: 110, count: 1 },
+    { item: 'fish_mahi', label: 'Mahi-Mahi', description: 'Gulf Stream gold.', zone: 'ocean', rarity: 'rare', price: 240, count: 1 },
+    { item: 'fish_peacock_bass', label: 'Peacock Bass', description: 'Miami canal celebrity.', zone: 'lake', rarity: 'uncommon', price: 72, count: 2 },
+    { item: 'fish_tilapia', label: 'Tilapia', description: 'Warm-water panfish in the canals.', zone: 'lake', rarity: 'common', price: 14, count: 5 },
+    { item: 'fish_salmon', label: 'Salmon', description: 'Runs the current. Staple creek paycheck.', zone: 'river', rarity: 'uncommon', price: 58, count: 2 },
   ],
   equipment: {
     fishing_rod_basic: 1,
     fishing_reel_basic: 1,
     fishing_line: 14,
     bait_ocean: 9,
+    bait_shrimp: 3,
     bait_lake: 4,
     bait_river: 2,
   },
   tasks: [
-    { id: 'catch_any', label: 'Fill the cooler', description: 'Land 8 fish of any kind today.', count: 8, progress: 5, claimed: false, reward: 175, rewardItems: [] },
-    { id: 'catch_ocean', label: 'Saltwater run', description: 'Catch 5 ocean fish.', count: 5, progress: 5, claimed: false, reward: 200, rewardItems: [] },
-    { id: 'catch_offshore', label: 'Go offshore', description: 'Catch 3 fish at an offshore hotspot.', count: 3, progress: 1, claimed: false, reward: 275, rewardItems: [] },
-    { id: 'catch_trophy', label: 'Trophy hunt', description: 'Land a rare or legendary fish.', count: 1, progress: 0, claimed: false, reward: 400, rewardItems: [{ item: 'bait_ocean', count: 5, label: 'Ocean Bait' }] },
-    { id: 'sell_cash', label: 'Cash out', description: 'Sell $400 worth of fish today.', count: 400, progress: 210, claimed: false, reward: 125, rewardItems: [] },
-    { id: 'rent_boat', label: 'Launch a skiff', description: 'Rent a boat from any fishing dock.', count: 1, progress: 1, claimed: true, reward: 75, rewardItems: [] },
+    { id: 'catch_any', label: 'Pack the cooler', description: 'Land 8 fish of any kind today.', count: 8, progress: 5, claimed: false, reward: 175, rewardItems: [] },
+    { id: 'catch_ocean', label: 'Biscayne run', description: 'Catch 5 ocean fish.', count: 5, progress: 5, claimed: false, reward: 200, rewardItems: [] },
+    { id: 'catch_offshore', label: 'Gulf Stream', description: 'Catch 3 fish at an offshore hotspot.', count: 3, progress: 1, claimed: false, reward: 275, rewardItems: [] },
+    { id: 'catch_trophy', label: 'Silver King', description: 'Land a rare or legendary fish.', count: 1, progress: 0, claimed: false, reward: 400, rewardItems: [{ item: 'bait_shrimp', count: 5, label: 'Live Shrimp' }] },
+    { id: 'sell_cash', label: 'Vice payout', description: 'Sell $400 worth of fish today.', count: 400, progress: 210, claimed: false, reward: 125, rewardItems: [] },
+    { id: 'rent_boat', label: 'Launch the 305', description: 'Rent a boat from any marina.', count: 1, progress: 1, claimed: true, reward: 75, rewardItems: [] },
   ],
   board: {
     dailyFish: { rows: [{ rank: 1, name: 'MoodyNewt8638', value: 18, me: true }, { rank: 2, name: 'Kai', value: 14 }, { rank: 3, name: 'Reese', value: 9 }], you: { rank: 1, value: 18 } },
@@ -102,17 +127,55 @@ const DEMO = {
   resetsIn: 14600,
 };
 
-const BOARD_TABS = [
-  { id: 'today', label: 'Today' },
-  { id: 'all', label: 'All time' },
-];
+const BOAT_DEMO = {
+  ok: true,
+  player: { name: 'MoodyNewt8638', cash: 12450 },
+  dock: { id: 'vespucci', label: '305 Marina', subtitle: 'Puerto Del Sol' },
+  boats: [
+    {
+      id: 'freeman',
+      label: 'Freeman',
+      description: 'Center-console fishing boat. Good all-rounder for the bay.',
+      times: [
+        { id: '15m', label: '15 minutes', minutes: 15, price: 350, deposit: 200, total: 550 },
+        { id: '30m', label: '30 minutes', minutes: 30, price: 630, deposit: 200, total: 830 },
+        { id: '1h', label: '1 hour', minutes: 60, price: 1050, deposit: 200, total: 1250 },
+        { id: '2h', label: '2 hours', minutes: 120, price: 1750, deposit: 200, total: 1950 },
+      ],
+    },
+    {
+      id: 'gradywhite',
+      label: 'Grady White',
+      description: 'Coastal walker. Stable for longer trips along the 305.',
+      times: [
+        { id: '15m', label: '15 minutes', minutes: 15, price: 450, deposit: 250, total: 700 },
+        { id: '30m', label: '30 minutes', minutes: 30, price: 810, deposit: 250, total: 1060 },
+        { id: '1h', label: '1 hour', minutes: 60, price: 1350, deposit: 250, total: 1600 },
+        { id: '2h', label: '2 hours', minutes: 120, price: 2250, deposit: 250, total: 2500 },
+      ],
+    },
+    {
+      id: 'yellowfin',
+      label: '26ft Yellowfin',
+      description: 'Offshore center console. Built for the Gulf Stream marks.',
+      times: [
+        { id: '15m', label: '15 minutes', minutes: 15, price: 600, deposit: 300, total: 900 },
+        { id: '30m', label: '30 minutes', minutes: 30, price: 1080, deposit: 300, total: 1380 },
+        { id: '1h', label: '1 hour', minutes: 60, price: 1800, deposit: 300, total: 2100 },
+        { id: '2h', label: '2 hours', minutes: 120, price: 3000, deposit: 300, total: 3300 },
+      ],
+    },
+  ],
+  rented: null,
+};
 
 const state = {
+  mode: 'shop',
   view: 'shop',
   tab: 'all',
   query: '',
   qty: {},
-  shop: { label: 'Del Perro Tackle', subtitle: 'Ocean outfitter', views: ['shop', 'sell', 'tasks', 'board'] },
+  shop: { label: '305 Pier Outfitters', subtitle: 'Vice City tackle', views: ['shop', 'sell', 'tasks', 'board'] },
   player: { name: 'Angler', cash: 0 },
   catalog: [],
   fish: [],
@@ -121,6 +184,8 @@ const state = {
   board: { dailyFish: { rows: [] }, dailyMoney: { rows: [] }, fish: { rows: [] }, money: { rows: [] } },
   you: { fish: 0, money: 0, dailyFish: 0, dailyMoney: 0 },
   resetsIn: 0,
+  boats: [],
+  rented: null,
   busy: false,
 };
 
@@ -135,10 +200,11 @@ function escapeHtml(value) {
 }
 
 function initials(name) {
-  return (name || 'DJ').split(/\s+/).map((p) => p[0]).join('').slice(0, 2).toUpperCase();
+  return (name || '305').split(/\s+/).map((p) => p[0]).join('').slice(0, 3).toUpperCase();
 }
 
 function toast(message) {
+  if (!message) return;
   toastEl.textContent = message;
   toastEl.classList.remove('hidden');
   clearTimeout(toast.timer);
@@ -188,7 +254,24 @@ function mockNui(name, payload) {
     state.player.cash += task.reward || 0;
     return { ok: true, money: task.reward, label: task.label, refresh: currentPayload() };
   }
-  return currentPayload();
+  if (name === 'rentBoat') {
+    if (state.rented) return { ok: false, error: 'notify_have_boat' };
+    const boat = state.boats.find((b) => b.id === payload.boat);
+    const slot = boat && (boat.times || []).find((t) => t.id === payload.duration);
+    if (!boat || !slot) return { ok: false };
+    if (state.player.cash < slot.total) return { ok: false };
+    state.player.cash -= slot.total;
+    state.rented = { label: boat.label, remaining: slot.minutes * 60, deposit: slot.deposit, durationLabel: slot.label };
+    return { ok: true, label: boat.label, durationLabel: slot.label, price: slot.price, deposit: slot.deposit, refresh: currentBoatPayload() };
+  }
+  if (name === 'returnBoat') {
+    if (!state.rented) return { ok: false };
+    const deposit = state.rented.deposit || 0;
+    state.player.cash += deposit;
+    state.rented = null;
+    return { ok: true, deposit, refresh: currentBoatPayload() };
+  }
+  return state.mode === 'boats' ? currentBoatPayload() : currentPayload();
 }
 
 function currentPayload() {
@@ -205,13 +288,24 @@ function currentPayload() {
   };
 }
 
+function currentBoatPayload() {
+  return {
+    ok: true,
+    player: state.player,
+    dock: state.shop,
+    boats: state.boats,
+    rented: state.rented,
+    cash: state.player.cash,
+  };
+}
+
 function toArray(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
   return Object.keys(value)
     .sort((a, b) => Number(a) - Number(b))
     .map((key) => value[key])
-    .filter((entry) => entry && typeof entry === 'object' && (entry.item || entry.label));
+    .filter((entry) => entry && typeof entry === 'object' && (entry.item || entry.label || entry.id));
 }
 
 function applyPayload(payload) {
@@ -220,22 +314,24 @@ function applyPayload(payload) {
   if (payload.player) {
     state.player = {
       name: payload.player.name || state.player.name,
-      cash: Number(payload.player.cash || 0),
+      cash: Number(payload.player.cash != null ? payload.player.cash : payload.cash || 0),
     };
+  } else if (payload.cash != null) {
+    state.player.cash = Number(payload.cash) || 0;
   }
 
   const catalog = toArray(payload.catalog);
   if (catalog.length) state.catalog = catalog;
 
-  state.fish = toArray(payload.fish);
-  state.equipment = payload.equipment && !Array.isArray(payload.equipment)
-    ? payload.equipment
-    : (payload.equipment || {});
-
+  if (payload.fish) state.fish = toArray(payload.fish);
+  if (payload.equipment && !Array.isArray(payload.equipment)) state.equipment = payload.equipment;
   if (payload.tasks) state.tasks = toArray(payload.tasks);
   if (payload.board) state.board = payload.board;
   if (payload.you) state.you = payload.you;
   if (payload.resetsIn != null) state.resetsIn = Number(payload.resetsIn) || 0;
+  if (payload.boats) state.boats = toArray(payload.boats);
+  if (payload.rented !== undefined) state.rented = payload.rented || null;
+  if (payload.dock) state.shop = { ...state.shop, ...payload.dock };
 
   playerNameEl.textContent = state.player.name;
   playerAvatarEl.textContent = initials(state.player.name);
@@ -247,9 +343,6 @@ function setView(view) {
   state.tab = view === 'board' ? 'today' : 'all';
   state.query = '';
   search.value = '';
-  document.querySelectorAll('.nav-btn').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.view === view);
-  });
   render();
 }
 
@@ -279,8 +372,25 @@ function formatReset(seconds) {
   return `${m}m`;
 }
 
+function formatLeft(sec) {
+  sec = Math.max(0, Math.floor(Number(sec) || 0));
+  if (sec >= 3600) return `${Math.floor(sec / 3600)}h ${Math.floor((sec % 3600) / 60)}m left`;
+  if (sec >= 60) return `${Math.floor(sec / 60)}m ${sec % 60}s left`;
+  return `${sec}s left`;
+}
+
 function rankLabel(rank) {
   return rank ? `#${rank}` : '—';
+}
+
+function renderNav() {
+  const items = state.mode === 'boats' ? BOAT_NAV : SHOP_NAV;
+  navEl.innerHTML = items.map((item) => `
+    <button type="button" class="nav-btn ${state.view === item.id ? 'active' : ''}" data-view="${item.id}">
+      ${ICONS[item.icon] || ''}
+      ${item.label}
+    </button>
+  `).join('');
 }
 
 function renderStats() {
@@ -292,7 +402,13 @@ function renderStats() {
   const claimed = state.tasks.filter((t) => t.claimed).length;
 
   let cards;
-  if (state.view === 'shop') {
+  if (state.mode === 'boats') {
+    cards = [
+      { label: 'Cash on hand', value: money(state.player.cash), hint: 'WALLET' },
+      { label: 'Boats on the slip', value: String(state.boats.length), hint: 'FLEET' },
+      { label: 'Active rental', value: state.rented ? state.rented.label : 'None', hint: 'DOCK' },
+    ];
+  } else if (state.view === 'shop') {
     cards = [
       { label: 'Cash on hand', value: money(state.player.cash), hint: 'WALLET' },
       { label: 'Tackle owned', value: String(gear), hint: 'GEAR' },
@@ -321,7 +437,7 @@ function renderStats() {
   stats.innerHTML = cards.map((c) => `
     <article class="stat">
       <span>${c.label}</span>
-      <strong>${c.value}</strong>
+      <strong>${escapeHtml(c.value)}</strong>
       <em>${c.hint}</em>
     </article>
   `).join('');
@@ -329,13 +445,13 @@ function renderStats() {
 
 function renderTabs() {
   const toolbar = document.querySelector('.toolbar');
-  toolbar.classList.toggle('search-hidden', state.view === 'tasks' || state.view === 'board');
+  const hideSearch = state.mode === 'boats' || state.view === 'tasks' || state.view === 'board';
+  toolbar.classList.toggle('search-hidden', hideSearch);
 
-  let tabs;
-  if (state.view === 'shop') tabs = CATEGORIES;
+  let tabs = [];
+  if (state.mode === 'shop' && state.view === 'shop') tabs = CATEGORIES;
   else if (state.view === 'sell') tabs = SELL_TABS;
   else if (state.view === 'board') tabs = BOARD_TABS;
-  else tabs = [];
 
   tabsEl.innerHTML = tabs.map((tab) => `
     <button type="button" class="tab ${state.tab === tab.id ? 'active' : ''}" data-tab="${tab.id}">${tab.label}</button>
@@ -351,7 +467,7 @@ function matchesQuery(item) {
 function renderShop() {
   const items = state.catalog.filter((item) => (state.tab === 'all' || item.category === state.tab) && matchesQuery(item));
   if (!items.length) {
-    content.innerHTML = emptyState('No gear matches', 'Try another tab or search.');
+    content.innerHTML = emptyState('No gear matches', 'Try another tab or search the marina.');
     return;
   }
 
@@ -359,14 +475,14 @@ function renderShop() {
     const qty = qtyFor(item.item, 50);
     const owned = ownedCount(item.item);
     return `
-      <article class="card" data-item="${item.item}">
+      <article class="card" data-item="${escapeHtml(item.item)}">
         <div class="card-head">
           <div class="icon">${iconFor(item)}</div>
-          <span class="badge">${item.category}</span>
+          <span class="badge">${escapeHtml(item.category)}</span>
         </div>
         <div>
-          <h3>${item.label}</h3>
-          <p>${item.description}</p>
+          <h3>${escapeHtml(item.label)}</h3>
+          <p>${escapeHtml(item.description)}</p>
         </div>
         <div class="meta-row">
           <div class="price">${money(item.price)} <span>each</span></div>
@@ -388,21 +504,21 @@ function renderShop() {
 function renderSell() {
   const items = state.fish.filter((item) => (state.tab === 'all' || item.zone === state.tab) && matchesQuery(item));
   if (!items.length) {
-    content.innerHTML = emptyState('No fish in your pack', 'Hit the ocean, lakes, or rivers, then sell here.');
+    content.innerHTML = emptyState('No fish in your pack', 'Hit Biscayne, the canals, or the creeks, then sell here.');
     return;
   }
 
   content.innerHTML = items.map((item) => {
     const qty = qtyFor(item.item, item.count);
     return `
-      <article class="card" data-item="${item.item}">
+      <article class="card" data-item="${escapeHtml(item.item)}">
         <div class="card-head">
           <div class="icon">${iconFor(item)}</div>
-          <span class="badge ${item.rarity}">${item.rarity} · ${item.zone}</span>
+          <span class="badge ${escapeHtml(item.rarity || '')}">${escapeHtml(item.rarity)} · ${escapeHtml(item.zone)}</span>
         </div>
         <div>
-          <h3>${item.label}</h3>
-          <p>${item.description}</p>
+          <h3>${escapeHtml(item.label)}</h3>
+          <p>${escapeHtml(item.description)}</p>
         </div>
         <div class="meta-row">
           <div class="price">${money(item.price)} <span>each</span></div>
@@ -437,19 +553,19 @@ function renderTasks() {
     if (task.claimed) action = `<button type="button" class="btn ghost" disabled>Claimed</button>`;
     else if (ready) action = `<button type="button" class="btn" data-act="claim">Claim ${money(task.reward)}</button>`;
     return `
-      <article class="card task-card" data-task="${task.id}">
+      <article class="card task-card" data-task="${escapeHtml(task.id)}">
         <div class="card-head">
           <div class="icon">${ICONS.fish}</div>
           <span class="badge ${task.claimed ? 'uncommon' : ready ? 'legendary' : ''}">${task.progress}/${task.count}</span>
         </div>
         <div>
-          <h3>${task.label}</h3>
-          <p>${task.description}</p>
+          <h3>${escapeHtml(task.label)}</h3>
+          <p>${escapeHtml(task.description)}</p>
         </div>
         <div class="bar"><i style="width:${pct}%"></i></div>
         <div class="meta-row">
           <div class="price">${money(task.reward)} <span>reward</span></div>
-          <span class="badge">${extras || 'Cash'}</span>
+          <span class="badge">${escapeHtml(extras || 'Cash')}</span>
         </div>
         ${action}
       </article>
@@ -489,12 +605,69 @@ function renderBoard() {
   `;
 }
 
+function renderFleet() {
+  if (!state.boats.length) {
+    content.innerHTML = emptyState('No boats on the slip', 'This marina has nothing to launch right now.');
+    return;
+  }
+
+  content.innerHTML = state.boats.map((boat) => `
+    <article class="card boat-card" data-boat="${escapeHtml(boat.id)}">
+      <div class="card-head">
+        <div class="icon">${ICONS.fleet}</div>
+        <span class="badge">rental</span>
+      </div>
+      <div>
+        <h3>${escapeHtml(boat.label)}</h3>
+        <p>${escapeHtml(boat.description || '')}</p>
+      </div>
+      <div class="times">
+        ${(boat.times || []).map((slot) => `
+          <button type="button" class="time-btn" data-act="rent" data-duration="${escapeHtml(slot.id)}" ${state.rented || state.player.cash < slot.total ? 'disabled' : ''}>
+            <b>${escapeHtml(slot.label)}</b>
+            <span>${money(slot.price)} + ${money(slot.deposit)} deposit</span>
+          </button>
+        `).join('')}
+      </div>
+    </article>
+  `).join('');
+}
+
+function renderActive() {
+  if (!state.rented) {
+    content.innerHTML = emptyState('No boat on the clock', 'Rent a skiff from the Fleet tab, then bring it back here.');
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="active-rental">
+      <div>
+        <h3>${escapeHtml(state.rented.label)}</h3>
+        <p>${escapeHtml(state.rented.durationLabel || 'On the water')} · ${formatLeft(state.rented.remaining)}</p>
+        <p>Deposit held: ${money(state.rented.deposit || 0)}</p>
+      </div>
+      <button type="button" class="btn" data-act="return">Return boat</button>
+    </div>
+  `;
+}
+
 function render() {
-  subtitleEl.textContent = state.shop.subtitle || 'Tackle & market';
+  titleEl.textContent = state.mode === 'boats'
+    ? (state.shop.label || '305 Marina')
+    : (state.shop.label || '305 Fishing');
+  subtitleEl.textContent = state.shop.subtitle || (state.mode === 'boats' ? 'Boat rental' : 'Vice City tackle');
+  playerRoleEl.textContent = state.mode === 'boats' ? 'Marina guest' : 'Licensed 305 angler';
   content.classList.toggle('tasks-view', state.view === 'tasks');
   content.classList.toggle('board-view', state.view === 'board');
+  content.classList.toggle('boats-view', state.mode === 'boats' && state.view === 'fleet');
+  renderNav();
   renderStats();
   renderTabs();
+  if (state.mode === 'boats') {
+    if (state.view === 'active') renderActive();
+    else renderFleet();
+    return;
+  }
   if (state.view === 'shop') renderShop();
   else if (state.view === 'sell') renderSell();
   else if (state.view === 'tasks') renderTasks();
@@ -503,17 +676,17 @@ function render() {
 
 function openUI(payload) {
   payload = payload || {};
+  state.mode = payload.mode === 'boats' ? 'boats' : 'shop';
   if (payload.shop) state.shop = payload.shop;
-  state.view = payload.view || 'shop';
+  if (payload.dock) state.shop = { ...state.shop, ...payload.dock };
+  state.view = payload.view || (state.mode === 'boats' ? 'fleet' : 'shop');
   state.tab = state.view === 'board' ? 'today' : 'all';
   state.query = '';
   state.qty = {};
   search.value = '';
   applyPayload(payload);
-  if (!state.catalog.length) state.catalog = DEMO.catalog;
-  document.querySelectorAll('.nav-btn').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.view === state.view);
-  });
+  if (state.mode === 'shop' && !state.catalog.length) state.catalog = DEMO.catalog;
+  if (state.mode === 'boats' && !state.boats.length) state.boats = BOAT_DEMO.boats;
   app.classList.remove('hidden');
   app.setAttribute('aria-hidden', 'false');
   render();
@@ -534,7 +707,7 @@ async function handleResult(result, fallback) {
   }
 }
 
-document.getElementById('nav').addEventListener('click', (e) => {
+navEl.addEventListener('click', (e) => {
   const btn = e.target.closest('.nav-btn');
   if (btn) setView(btn.dataset.view);
 });
@@ -560,10 +733,28 @@ search.addEventListener('input', () => {
 });
 
 content.addEventListener('click', async (e) => {
-  const card = e.target.closest('.card');
   const btn = e.target.closest('button');
-  if (!card || !btn || state.busy) return;
+  if (!btn || state.busy) return;
   const act = btn.dataset.act;
+
+  if (act === 'return') {
+    state.busy = true;
+    const result = await nui('returnBoat');
+    state.busy = false;
+    await handleResult(result, result && result.ok ? `Boat returned. ${money(result.deposit)} deposit back.` : '');
+    return;
+  }
+
+  const card = e.target.closest('.card');
+  if (!card) return;
+
+  if (act === 'rent') {
+    state.busy = true;
+    const result = await nui('rentBoat', { boat: card.dataset.boat, duration: btn.dataset.duration });
+    state.busy = false;
+    await handleResult(result, result && result.ok ? `Rented ${result.label} · ${result.durationLabel}` : '');
+    return;
+  }
 
   if (act === 'claim') {
     state.busy = true;
@@ -627,9 +818,14 @@ window.addEventListener('message', (event) => {
 
 if (!inFiveM) {
   document.body.classList.add('preview');
-  openUI({
-    view: 'shop',
-    shop: { label: 'Del Perro Tackle', subtitle: 'Ocean outfitter', views: ['shop', 'sell', 'tasks', 'board'] },
-    ...DEMO,
-  });
+  const mode = new URLSearchParams(location.search).get('mode') === 'boats' ? 'boats' : 'shop';
+  if (mode === 'boats') {
+    openUI({ mode: 'boats', view: 'fleet', ...BOAT_DEMO });
+  } else {
+    openUI({
+      view: 'shop',
+      shop: { label: '305 Pier Outfitters', subtitle: 'Vice City tackle', views: ['shop', 'sell', 'tasks', 'board'] },
+      ...DEMO,
+    });
+  }
 }

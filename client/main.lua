@@ -9,8 +9,12 @@ local cachedCatalog
 
 CurrentZone = nil
 
-function IsShopOpen()
+function IsTackleShopOpen()
     return shopOpen
+end
+
+function IsShopOpen()
+    return shopOpen or (IsBoatMenuOpen and IsBoatMenuOpen())
 end
 
 local function notify(key, nType, ...)
@@ -60,7 +64,7 @@ local function catalogFromConfig()
 end
 
 local function openShop(shop, view)
-    if shopOpen or IsFishing() then return end
+    if shopOpen or IsFishing() or (IsBoatMenuOpen and IsBoatMenuOpen()) then return end
     local payload = lib.callback.await('djfivem-fishing:openShop', false, shop.id)
     if not payload or not payload.ok then
         notify(payload and payload.error or 'notify_too_far', 'error')
@@ -322,12 +326,25 @@ local function refreshFromServer()
 end
 
 RegisterNUICallback('close', function(_, cb)
-    closeShop()
+    if shopOpen then
+        shopOpen = false
+        currentShopId = nil
+    end
+    if CloseBoatMenu then CloseBoatMenu(true) end
+    SetNuiFocus(false, false)
     cb({ ok = true })
 end)
 
+local function shopGuard()
+    return shopOpen and type(currentShopId) == 'string'
+end
+
 RegisterNUICallback('buy', function(data, cb)
-    local result = lib.callback.await('djfivem-fishing:buy', false, currentShopId, data.item, data.amount)
+    if not shopGuard() then
+        cb({ ok = false, error = 'notify_too_far' })
+        return
+    end
+    local result = lib.callback.await('djfivem-fishing:buy', false, currentShopId, data and data.item, data and data.amount)
     if result and result.ok then
         notify('notify_bought', 'success', result.amount, result.label, result.total)
         result.refresh = refreshFromServer()
@@ -338,7 +355,11 @@ RegisterNUICallback('buy', function(data, cb)
 end)
 
 RegisterNUICallback('sell', function(data, cb)
-    local result = lib.callback.await('djfivem-fishing:sell', false, currentShopId, data.item, data.amount)
+    if not shopGuard() then
+        cb({ ok = false, error = 'notify_too_far' })
+        return
+    end
+    local result = lib.callback.await('djfivem-fishing:sell', false, currentShopId, data and data.item, data and data.amount)
     if result and result.ok then
         notify('notify_sold', 'success', result.amount, result.label, result.total)
         result.refresh = refreshFromServer()
@@ -349,6 +370,10 @@ RegisterNUICallback('sell', function(data, cb)
 end)
 
 RegisterNUICallback('sellAll', function(_, cb)
+    if not shopGuard() then
+        cb({ ok = false, error = 'notify_too_far' })
+        return
+    end
     local result = lib.callback.await('djfivem-fishing:sellAll', false, currentShopId)
     if result and result.ok then
         notify('notify_sold_all', 'success', result.total)
@@ -360,10 +385,18 @@ RegisterNUICallback('sellAll', function(_, cb)
 end)
 
 RegisterNUICallback('refresh', function(_, cb)
+    if not shopGuard() then
+        cb({ ok = false })
+        return
+    end
     cb(refreshFromServer() or { ok = false })
 end)
 
 RegisterNUICallback('claimTask', function(data, cb)
+    if not shopGuard() then
+        cb({ ok = false, error = 'notify_too_far' })
+        return
+    end
     local result = lib.callback.await('djfivem-fishing:claimTask', false, currentShopId, data and data.id)
     if result and result.ok then
         notify('notify_task_claimed', 'success', result.label, result.money or 0)
